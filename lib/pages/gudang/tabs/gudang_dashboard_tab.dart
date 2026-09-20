@@ -1,0 +1,349 @@
+import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/empty_data_view.dart';
+import '../../../core/widgets/metric_card.dart';
+import '../../../models/stock_movement.dart';
+import '../../../services/gudang_service.dart';
+
+class GudangDashboardTab extends StatefulWidget {
+  final Function(int tabIndex)? onNavigateTab;
+
+  const GudangDashboardTab({super.key, this.onNavigateTab});
+
+  @override
+  State<GudangDashboardTab> createState() => _GudangDashboardTabState();
+}
+
+class _GudangDashboardTabState extends State<GudangDashboardTab> {
+  final GudangService _gudangService = GudangService();
+  bool _isLoading = true;
+  Map<String, dynamic> _stats = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
+    final stats = await _gudangService.getInventoryStats();
+    if (mounted) {
+      setState(() {
+        _stats = stats;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)));
+    }
+
+    final totalProducts = _stats['totalProducts'] ?? 0;
+    final lowStockCount = _stats['lowStockCount'] ?? 0;
+    final outOfStockCount = _stats['outOfStockCount'] ?? 0;
+    final totalValuation = _stats['totalValuation'] ?? 0;
+    final todayMovements = _stats['todayMovements'] ?? 0;
+    final recentMovements = _stats['recentMovements'] as List<StockMovement>? ?? [];
+
+    return RefreshIndicator(
+      color: const Color(0xFFE65100),
+      onRefresh: _loadDashboardData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── BANNER HEADER GUDANG ────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE65100), Color(0xFFBF360C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE65100).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.warehouse_rounded, color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 10),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ADMIN GUDANG',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              Text(
+                                'Manajemen Logistik & Stok Toko',
+                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$todayMovements Mutasi Hari Ini',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Estimasi Nilai Aset Inventaris',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formatRupiah(totalValuation),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── GRID METRIK INVENTARIS ──────────────────────────────────
+            const Text(
+              'Status Inventaris',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
+            ),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.15,
+              children: [
+                MetricCard(
+                  title: 'Total Varian Barang',
+                  value: '$totalProducts SKU',
+                  icon: Icons.inventory_2_rounded,
+                  color: const Color(0xFFE65100),
+                  subtitle: 'Katalog Aktif',
+                  onTap: () => widget.onNavigateTab?.call(1),
+                ),
+                MetricCard(
+                  title: 'Stok Kritis (≤ 5)',
+                  value: '$lowStockCount Item',
+                  icon: Icons.warning_amber_rounded,
+                  color: Colors.amber.shade900,
+                  subtitle: lowStockCount > 0 ? 'Perlu Restock' : 'Aman',
+                  onTap: () => widget.onNavigateTab?.call(1),
+                ),
+                MetricCard(
+                  title: 'Stok Habis (0)',
+                  value: '$outOfStockCount Item',
+                  icon: Icons.remove_shopping_cart_rounded,
+                  color: Colors.red.shade700,
+                  subtitle: outOfStockCount > 0 ? 'Segera Pesan' : 'Nihil',
+                  onTap: () => widget.onNavigateTab?.call(1),
+                ),
+                MetricCard(
+                  title: 'Mutasi Stok',
+                  value: '$todayMovements Kali',
+                  icon: Icons.swap_vert_rounded,
+                  color: const Color(0xFF00897B),
+                  subtitle: 'Hari Ini',
+                  onTap: () => widget.onNavigateTab?.call(2),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── QUICK ACTION BUTTONS ───────────────────────────────────
+            const Text(
+              'Aksi Cepat Gudang',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => widget.onNavigateTab?.call(1),
+                    icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                    label: const Text('Barang Masuk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE65100),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => widget.onNavigateTab?.call(2),
+                    icon: const Icon(Icons.history_rounded, size: 18),
+                    label: const Text('Riwayat Mutasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFE65100),
+                      side: const BorderSide(color: Color(0xFFE65100)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // ── RECENT MUTATIONS LIST ───────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Pergerakan Stok Terkini',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
+                ),
+                TextButton(
+                  onPressed: () => widget.onNavigateTab?.call(2),
+                  child: const Text('Lihat Semua', style: TextStyle(color: Color(0xFFE65100))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (recentMovements.isEmpty)
+              const EmptyDataView(
+                icon: Icons.swap_vert_rounded,
+                title: 'Belum Ada Mutasi Stok',
+                subtitle: 'Pencatatan barang masuk atau opname akan tampil di sini.',
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: recentMovements.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final move = recentMovements[index];
+                  final isIn = move.isIn;
+                  final isAdjust = move.isAdjust;
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: isIn
+                              ? Colors.green.shade50
+                              : isAdjust
+                                  ? Colors.blueGrey.shade50
+                                  : Colors.red.shade50,
+                          child: Icon(
+                            isIn
+                                ? Icons.arrow_downward_rounded
+                                : isAdjust
+                                    ? Icons.tune_rounded
+                                    : Icons.arrow_upward_rounded,
+                            color: isIn
+                                ? Colors.green.shade700
+                                : isAdjust
+                                    ? Colors.blueGrey.shade700
+                                    : Colors.red.shade700,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                move.type == 'IN'
+                                    ? 'BARANG MASUK (+${move.quantityDelta})'
+                                    : move.type == 'ADJUST'
+                                        ? 'STOCK OPNAME (${move.quantityDelta >= 0 ? '+' : ''}${move.quantityDelta})'
+                                        : 'BARANG KELUAR (${move.quantityDelta})',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: isIn
+                                      ? Colors.green.shade800
+                                      : isAdjust
+                                          ? Colors.blueGrey.shade800
+                                          : Colors.red.shade800,
+                                ),
+                              ),
+                              if (move.note != null && move.note!.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  move.note!,
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Text(
+                          DateHelper.formatEpochMs(move.createdAtEpochMs),
+                          style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
