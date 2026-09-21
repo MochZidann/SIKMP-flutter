@@ -6,6 +6,8 @@ import '../../../models/audit_log.dart';
 import '../../../services/admin_service.dart';
 import '../../../services/pos_service.dart';
 import '../widgets/add_user_dialog.dart';
+import '../widgets/database_health_sheet.dart';
+import '../widgets/store_settings_dialog.dart';
 
 class AdminDashboardTab extends StatefulWidget {
   final Function(int tabIndex)? onNavigateTab;
@@ -29,7 +31,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
 
   Future<void> _loadDashboardData() async {
     setState(() => _isLoading = true);
-    final stats = await _adminService.getSystemStats();
+    final stats = await _adminService.getDashboardStats();
     if (mounted) {
       setState(() {
         _stats = stats;
@@ -45,8 +47,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     }
 
     final totalUsers = _stats['totalUsers'] ?? 0;
+    final activeUsers = _stats['activeUsers'] ?? 0;
     final totalMembers = _stats['totalMembers'] ?? 0;
     final totalLogs = _stats['totalLogs'] ?? 0;
+    final totalDatabaseRows = _stats['totalDatabaseRows'] ?? 0;
     final serverStatus = _stats['serverStatus'] ?? 'ONLINE';
     final recentLogs = _stats['recentLogs'] as List<AuditLog>? ?? [];
 
@@ -150,7 +154,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Server Endpoint: ${PosService.baseUrl.replaceAll('/api/pos', '')}',
+                    'Server: ${PosService.baseUrl.replaceAll('/api/pos', '')}',
                     style: const TextStyle(color: Colors.white60, fontSize: 11, fontFamily: 'monospace'),
                   ),
                 ],
@@ -160,7 +164,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
 
             // ── GRID METRIK UTAMA ───────────────────────────────────────
             const Text(
-              'Ringkasan Sistem',
+              'Ringkasan Sistem & Performa',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
             ),
             const SizedBox(height: 12),
@@ -177,7 +181,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   value: '$totalUsers User',
                   icon: Icons.people_alt_rounded,
                   color: const Color(0xFF1976D2),
-                  subtitle: 'Akun Aktif',
+                  subtitle: '$activeUsers Aktif',
                   onTap: () => widget.onNavigateTab?.call(1),
                 ),
                 MetricCard(
@@ -185,7 +189,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   value: '$totalMembers Anggota',
                   icon: Icons.card_membership_rounded,
                   color: const Color(0xFF00897B),
-                  subtitle: 'Terdaftar',
+                  subtitle: 'Terdaftar Aktif',
                   onTap: () => widget.onNavigateTab?.call(2),
                 ),
                 MetricCard(
@@ -193,16 +197,16 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   value: '$totalLogs Log',
                   icon: Icons.history_edu_rounded,
                   color: const Color(0xFF8E24AA),
-                  subtitle: 'Terekam',
+                  subtitle: 'Audit Trail',
                   onTap: () => widget.onNavigateTab?.call(3),
                 ),
                 MetricCard(
-                  title: 'Status Koneksi',
-                  value: serverStatus,
-                  icon: Icons.cloud_done_rounded,
-                  color: const Color(0xFF2E7D32),
-                  subtitle: 'REST API',
-                  onTap: _loadDashboardData,
+                  title: 'Kesehatan Data',
+                  value: '$totalDatabaseRows Baris',
+                  icon: Icons.storage_rounded,
+                  color: const Color(0xFFE65100),
+                  subtitle: 'Tabel & Server Cache',
+                  onTap: () => DatabaseHealthSheet.show(context),
                 ),
               ],
             ),
@@ -210,39 +214,55 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
 
             // ── QUICK ACTIONS ───────────────────────────────────────────
             const Text(
-              'Aksi Cepat Admin',
+              'Pusat Kendali Admin',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
+                  child: _QuickActionButton(
+                    icon: Icons.person_add_alt_1_rounded,
+                    label: 'Tambah User',
+                    color: const Color(0xFF1976D2),
+                    onTap: () {
                       AddUserDialog.show(context, onUserAdded: _loadDashboardData);
                     },
-                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                    label: const Text('Tambah User', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1976D2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _loadDashboardData,
-                    icon: const Icon(Icons.sync_rounded, size: 18),
-                    label: const Text('Sinkronisasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF1976D2),
-                      side: const BorderSide(color: Color(0xFF1976D2)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  child: _QuickActionButton(
+                    icon: Icons.storefront_rounded,
+                    label: 'Profil & Struk',
+                    color: const Color(0xFF00796B),
+                    onTap: () {
+                      StoreSettingsDialog.show(context, onSaved: _loadDashboardData);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.storage_rounded,
+                    label: 'Database & Cache',
+                    color: const Color(0xFFE65100),
+                    onTap: () {
+                      DatabaseHealthSheet.show(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.sync_rounded,
+                    label: 'Sinkronisasi',
+                    color: const Color(0xFF455A64),
+                    onTap: _loadDashboardData,
                   ),
                 ),
               ],
@@ -323,6 +343,64 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.grey.shade800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

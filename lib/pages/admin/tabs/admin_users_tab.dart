@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/auth_user.dart';
 import '../../../services/admin_service.dart';
+import '../../../services/auth_service.dart';
 import '../widgets/add_user_dialog.dart';
 import '../widgets/user_card.dart';
 
@@ -62,6 +63,129 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
       return matchesQuery && matchesRole;
     }).toList();
+  }
+
+  void _toggleUserStatus(AuthUser user, bool targetActive) {
+    final actionText = targetActive ? 'Aktifkan' : 'Nonaktifkan';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$actionText Akun?'),
+        content: Text(
+          targetActive
+              ? 'Akun @${user.username} akan dapat login dan bertransaksi kembali di sistem.'
+              : 'Akun @${user.username} akan dinonaktifkan dan tidak dapat login ke sistem sampai diaktifkan kembali.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: targetActive ? const Color(0xFF1976D2) : Colors.orange.shade800,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final currentAdmin = AuthService().currentUser;
+              final res = await _adminService.toggleUserStatus(user.id, adminId: currentAdmin?.id);
+              if (mounted) {
+                if (res['success'] == true) {
+                  _loadUsers();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(res['message'] ?? 'Status berhasil diubah'),
+                      backgroundColor: Colors.green.shade700,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(res['message'] ?? 'Gagal mengubah status akun'),
+                      backgroundColor: Colors.red.shade700,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(actionText, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(AuthUser user) {
+    final passCtrl = TextEditingController(text: 'password123');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Password Pengguna'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reset password akun @${user.username} (${user.name}). Pengguna perlu menggunakan password ini untuk login kembali.',
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: passCtrl,
+              decoration: InputDecoration(
+                labelText: 'Password Baru',
+                prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1976D2)),
+            onPressed: () async {
+              final newPass = passCtrl.text.trim();
+              if (newPass.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password minimal 6 karakter')),
+                );
+                return;
+              }
+              Navigator.pop(ctx);
+              final currentAdmin = AuthService().currentUser;
+              final res = await _adminService.resetUserPassword(
+                user.id,
+                password: newPass,
+                adminId: currentAdmin?.id,
+              );
+              if (mounted) {
+                if (res['success'] == true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(res['message'] ?? 'Password berhasil di-reset'),
+                      backgroundColor: Colors.green.shade700,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(res['message'] ?? 'Gagal reset password'),
+                      backgroundColor: Colors.red.shade700,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Reset Password', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _confirmDeleteUser(AuthUser user) {
@@ -201,6 +325,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             final user = _filteredUsers[index];
                             return UserCard(
                               user: user,
+                              onToggleActive: (active) => _toggleUserStatus(user, active),
+                              onResetPassword: () => _showResetPasswordDialog(user),
                               onDelete: () => _confirmDeleteUser(user),
                             );
                           },

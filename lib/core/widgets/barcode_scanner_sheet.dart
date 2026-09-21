@@ -118,52 +118,51 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
         children: [
           // ── HEADER MODAL ──────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.redAccent, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.redAccent, size: 20),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: 'Nyalakan Senter',
-                      icon: Icon(
-                        _torchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
-                        color: _torchOn ? Colors.amberAccent : Colors.white70,
-                      ),
-                      onPressed: _toggleTorch,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    IconButton(
-                      tooltip: 'Putar Kamera',
-                      icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white70),
-                      onPressed: _switchCamera,
-                    ),
-                    IconButton(
-                      tooltip: 'Tutup',
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Nyalakan Senter',
+                  icon: Icon(
+                    _torchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                    color: _torchOn ? Colors.amberAccent : Colors.white70,
+                    size: 20,
+                  ),
+                  onPressed: _toggleTorch,
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Putar Kamera',
+                  icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white70, size: 20),
+                  onPressed: _switchCamera,
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Tutup',
+                  icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
@@ -254,9 +253,13 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                 children: [
                   const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 16),
                   const SizedBox(width: 8),
-                  Text(
-                    'Posisikan barcode di dalam kotak merah',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+                  Flexible(
+                    child: Text(
+                      'Posisikan barcode di dalam kotak merah',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
