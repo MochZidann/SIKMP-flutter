@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
 import '../pos/widgets/pos_settings_dialog.dart';
-import 'tabs/admin_audit_tab.dart';
-import 'tabs/admin_dashboard_tab.dart';
-import 'tabs/admin_members_tab.dart';
-import 'tabs/admin_users_tab.dart';
+import 'tabs/owner_dashboard_tab.dart';
+import 'tabs/owner_inventory_tab.dart';
+import 'tabs/owner_sales_tab.dart';
 
-class AdminMainPage extends StatefulWidget {
+class OwnerMainPage extends StatefulWidget {
   final int initialIndex;
 
-  const AdminMainPage({super.key, this.initialIndex = 0});
+  const OwnerMainPage({super.key, this.initialIndex = 0});
 
   @override
-  State<AdminMainPage> createState() => _AdminMainPageState();
+  State<OwnerMainPage> createState() => _OwnerMainPageState();
 }
 
-class _AdminMainPageState extends State<AdminMainPage> {
+class _OwnerMainPageState extends State<OwnerMainPage> {
   late int _currentIndex;
 
   @override
@@ -28,14 +27,12 @@ class _AdminMainPageState extends State<AdminMainPage> {
   String get _appBarTitle {
     switch (_currentIndex) {
       case 1:
-        return 'Kelola Pengguna';
+        return 'Laporan Penjualan';
       case 2:
-        return 'Anggota Koperasi';
-      case 3:
-        return 'Audit Log';
+        return 'Kesehatan Stok';
       case 0:
       default:
-        return 'Dashboard Admin';
+        return 'Dashboard Owner';
     }
   }
 
@@ -50,14 +47,14 @@ class _AdminMainPageState extends State<AdminMainPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Keluar dari Akun?'),
-        content: const Text('Apakah Anda yakin ingin logout dari akun Admin Sistem?'),
+        content: const Text('Apakah Anda yakin ingin logout dari akun Owner / Pengawas?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1976D2)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00796B)),
             onPressed: () async {
               Navigator.pop(ctx);
               await AuthService().logout();
@@ -79,8 +76,9 @@ class _AdminMainPageState extends State<AdminMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1976D2),
+        backgroundColor: const Color(0xFF00796B),
         elevation: 0,
         foregroundColor: Colors.white,
         title: Row(
@@ -93,7 +91,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
               ),
               child: const Icon(
                 Icons.storefront_rounded,
-                color: Color(0xFF1976D2),
+                color: Color(0xFF00796B),
                 size: 20,
               ),
             ),
@@ -122,10 +120,9 @@ class _AdminMainPageState extends State<AdminMainPage> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          AdminDashboardTab(onNavigateTab: _onTabTapped),
-          const AdminUsersTab(),
-          const AdminMembersTab(),
-          const AdminAuditTab(),
+          OwnerDashboardTab(onNavigateTab: _onTabTapped),
+          const OwnerSalesTab(),
+          const OwnerInventoryTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -143,13 +140,13 @@ class _AdminMainPageState extends State<AdminMainPage> {
           data: NavigationBarThemeData(
             height: 68,
             backgroundColor: Colors.white,
-            indicatorColor: const Color(0xFFE3F2FD),
+            indicatorColor: const Color(0xFFE0F2F1),
             labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1976D2),
+                  color: Color(0xFF00796B),
                 );
               }
               return TextStyle(
@@ -161,7 +158,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
             iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
               if (states.contains(WidgetState.selected)) {
                 return const IconThemeData(
-                  color: Color(0xFF1976D2),
+                  color: Color(0xFF00796B),
                   size: 24,
                 );
               }
@@ -180,25 +177,19 @@ class _AdminMainPageState extends State<AdminMainPage> {
                 icon: Icon(Icons.dashboard_outlined),
                 selectedIcon: Icon(Icons.dashboard_rounded),
                 label: 'Dashboard',
-                tooltip: 'Dashboard Admin Sistem',
+                tooltip: 'Dashboard Owner',
               ),
               NavigationDestination(
-                icon: Icon(Icons.people_outline_rounded),
-                selectedIcon: Icon(Icons.people_rounded),
-                label: 'Pengguna',
-                tooltip: 'Kelola Akun Pengguna',
+                icon: Icon(Icons.analytics_outlined),
+                selectedIcon: Icon(Icons.analytics_rounded),
+                label: 'Penjualan',
+                tooltip: 'Laporan Penjualan & Kasir',
               ),
               NavigationDestination(
-                icon: Icon(Icons.card_membership_outlined),
-                selectedIcon: Icon(Icons.card_membership_rounded),
-                label: 'Anggota',
-                tooltip: 'Data Anggota Koperasi',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.history_edu_outlined),
-                selectedIcon: Icon(Icons.history_edu_rounded),
-                label: 'Audit Log',
-                tooltip: 'Log Aktivitas Sistem',
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2_rounded),
+                label: 'Kesehatan Stok',
+                tooltip: 'Valuasi Aset & Stok Kritis',
               ),
             ],
           ),

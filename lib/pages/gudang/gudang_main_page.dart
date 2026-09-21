@@ -25,6 +25,18 @@ class _GudangMainPageState extends State<GudangMainPage> {
     _currentIndex = widget.initialIndex;
   }
 
+  String get _appBarTitle {
+    switch (_currentIndex) {
+      case 1:
+        return 'Katalog Stok Gudang';
+      case 2:
+        return 'Riwayat Mutasi Stok';
+      case 0:
+      default:
+        return 'Dashboard Gudang';
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -64,8 +76,6 @@ class _GudangMainPageState extends State<GudangMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService().currentUser;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFE65100),
@@ -80,24 +90,15 @@ class _GudangMainPageState extends State<GudangMainPage> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.warehouse_rounded,
+                Icons.storefront_rounded,
                 color: Color(0xFFE65100),
                 size: 20,
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Admin Gudang',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  'Manajemen Stok & Logistik',
-                  style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
-                ),
-              ],
+            Text(
+              _appBarTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),

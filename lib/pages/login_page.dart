@@ -5,6 +5,7 @@ import '../services/pos_service.dart';
 import 'admin/admin_main_page.dart';
 import 'gudang/gudang_main_page.dart';
 import 'kasir_main_page.dart';
+import 'owner/owner_main_page.dart';
 import 'qris_payment_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -60,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       'subtitle': 'Laporan & Audit',
       'icon': Icons.pie_chart_rounded,
       'color': const Color(0xFF00796B),
-      'isReady': false,
+      'isReady': true,
       'defaultUser': 'owner',
     },
   ];
@@ -130,8 +131,15 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(builder: (context) => const GudangMainPage()),
         );
+      } else if (user.isOwner) {
+        // Alur OWNER / PENGAWAS: Masuk ke Owner Dashboard
+        _showSnackbar('Selamat datang, Pengawas ${user.name}!');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OwnerMainPage()),
+        );
       } else {
-        // Alur Role Lainnya (Owner)
+        // Alur Role Lainnya (Jika ada)
         _showOtherRoleDialog(user);
       }
     } catch (e) {

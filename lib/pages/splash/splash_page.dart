@@ -5,6 +5,7 @@ import '../admin/admin_main_page.dart';
 import '../gudang/gudang_main_page.dart';
 import '../kasir_main_page.dart';
 import '../login_page.dart';
+import '../owner/owner_main_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -57,6 +58,8 @@ class _SplashPageState extends State<SplashPage>
             targetPage = const GudangMainPage();
           } else if (user.isKasir) {
             targetPage = const KasirMainPage();
+          } else if (user.isOwner) {
+            targetPage = const OwnerMainPage();
           }
         }
 
