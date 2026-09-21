@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
+import '../widgets/stock_adjust_dialog.dart';
+import '../widgets/stock_in_dialog.dart';
 
 class GudangDashboardTab extends StatefulWidget {
   final Function(int tabIndex)? onNavigateTab;
@@ -34,6 +37,126 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
         _stats = stats;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _quickScanBarcode() async {
+    final scannedCode = await BarcodeScannerSheet.show(
+      context,
+      title: 'Scan Cepat Barang Gudang',
+    );
+
+    if (scannedCode == null || !mounted) return;
+
+    final products = await _gudangService.getProducts();
+    final matched = products.where((p) =>
+        p.barcode?.trim().toLowerCase() == scannedCode.toLowerCase() ||
+        p.id.toString() == scannedCode).firstOrNull;
+
+    if (!mounted) return;
+
+    if (matched != null) {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          matched.name,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Barcode: ${matched.barcode ?? '-'} | Stok Saat Ini: ${matched.stock} unit',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE65100),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                      label: const Text('+ Restock Masuk'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        StockInDialog.show(
+                          context,
+                          product: matched,
+                          onStockUpdated: _loadDashboardData,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFE65100),
+                        side: const BorderSide(color: Color(0xFFE65100)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.tune_rounded, size: 18),
+                      label: const Text('Stock Opname'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        StockAdjustDialog.show(
+                          context,
+                          product: matched,
+                          onStockUpdated: _loadDashboardData,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Barang dengan barcode "$scannedCode" tidak ditemukan')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE65100),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -207,10 +330,11 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
             Row(
               children: [
                 Expanded(
+                  flex: 5,
                   child: ElevatedButton.icon(
-                    onPressed: () => widget.onNavigateTab?.call(1),
-                    icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
-                    label: const Text('Barang Masuk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    onPressed: _quickScanBarcode,
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                    label: const Text('Scan Barcode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE65100),
                       foregroundColor: Colors.white,
@@ -219,18 +343,31 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
+                  flex: 5,
                   child: OutlinedButton.icon(
-                    onPressed: () => widget.onNavigateTab?.call(2),
-                    icon: const Icon(Icons.history_rounded, size: 18),
-                    label: const Text('Riwayat Mutasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    onPressed: () => widget.onNavigateTab?.call(1),
+                    icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                    label: const Text('Katalog Stok', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFE65100),
                       side: const BorderSide(color: Color(0xFFE65100)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    tooltip: 'Riwayat Mutasi',
+                    icon: const Icon(Icons.history_rounded, color: Color(0xFFE65100)),
+                    onPressed: () => widget.onNavigateTab?.call(2),
                   ),
                 ),
               ],

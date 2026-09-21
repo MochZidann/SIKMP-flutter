@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/product.dart';
 import '../../../services/gudang_service.dart';
@@ -62,6 +63,39 @@ class _GudangStockTabState extends State<GudangStockTab> {
     }).toList();
   }
 
+  Future<void> _openBarcodeScanner() async {
+    final scannedCode = await BarcodeScannerSheet.show(
+      context,
+      title: 'Scan Barcode Gudang',
+    );
+
+    if (scannedCode == null || !mounted) return;
+
+    _searchController.text = scannedCode;
+    setState(() {});
+
+    final matched = _products.where((p) =>
+        p.barcode?.trim().toLowerCase() == scannedCode.toLowerCase() ||
+        p.id.toString() == scannedCode).firstOrNull;
+
+    if (matched == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Barang dengan barcode "$scannedCode" tidak ditemukan')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE65100),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,34 +108,61 @@ class _GudangStockTabState extends State<GudangStockTab> {
             color: Colors.white,
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama barang atau barcode...',
-                    hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFE65100), size: 20),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {});
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText: 'Cari nama barang atau barcode...',
+                          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFE65100), size: 20),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {});
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    const SizedBox(width: 8),
+                    Container(
+                      height: 48,
+                      width: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE65100),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE65100).withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        tooltip: 'Scan Barcode Kamera',
+                        icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
+                        onPressed: _openBarcodeScanner,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 10),
 

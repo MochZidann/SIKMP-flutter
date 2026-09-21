@@ -94,7 +94,7 @@ class _GudangMainPageState extends State<GudangMainPage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  user != null ? 'Petugas: ${user.name}' : 'Manajemen Stok & Inventaris',
+                  'Manajemen Stok & Logistik',
                   style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
                 ),
               ],

@@ -274,9 +274,26 @@ class _PenjualanTabState extends State<PenjualanTab> {
         backgroundColor: const Color(0xFFD32F2F),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: const Text(
-          'Riwayat Penjualan',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.storefront_rounded,
+                color: Color(0xFFD32F2F),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Riwayat Penjualan',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
         ),
         actions: [
           IconButton(

@@ -215,16 +215,24 @@ class _PosPageState extends State<PosPage> {
         backgroundColor: const Color(0xFFD32F2F),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.storefront_rounded,
+                color: Color(0xFFD32F2F),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
             const Text(
               'Kasir POS',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-            ),
-            Text(
-              'Sentuh kartu produk untuk menambah ke keranjang',
-              style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),

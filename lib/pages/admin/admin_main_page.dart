@@ -94,7 +94,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  user != null ? 'Operator: ${user.name}' : 'Panel Kontrol Koperasi',
+                  'Panel Kontrol & Keamanan',
                   style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
                 ),
               ],

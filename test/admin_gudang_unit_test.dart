@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_kop/core/utils/date_helper.dart';
 import 'package:flutter_kop/core/utils/password_helper.dart';
+import 'package:flutter_kop/core/widgets/barcode_scanner_sheet.dart';
 import 'package:flutter_kop/models/member.dart';
 import 'package:flutter_kop/models/audit_log.dart';
 import 'package:flutter_kop/models/stock_movement.dart';
@@ -116,6 +117,32 @@ void main() {
       final adjustMove = StockMovement.fromJson(adjustJson);
       expect(adjustMove.isAdjust, isTrue);
       expect(adjustMove.quantityDelta, -2);
+    });
+  });
+
+  group('BarcodeScannerSheet Security & Sanitization Tests', () {
+    test('accepts valid standard EAN-13 and alphanumeric barcodes', () {
+      expect(BarcodeScannerSheet.sanitizeBarcode('8999999123456'), '8999999123456');
+      expect(BarcodeScannerSheet.sanitizeBarcode('BRG-001_A'), 'BRG-001_A');
+      expect(BarcodeScannerSheet.sanitizeBarcode('PROD.123/XYZ'), 'PROD.123/XYZ');
+    });
+
+    test('trims whitespace safely', () {
+      expect(BarcodeScannerSheet.sanitizeBarcode('   89912345   '), '89912345');
+    });
+
+    test('rejects null and too short or too long inputs', () {
+      expect(BarcodeScannerSheet.sanitizeBarcode(null), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode('12'), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode('a' * 65), isNull);
+    });
+
+    test('blocks malicious SQL injection and XSS payloads', () {
+      expect(BarcodeScannerSheet.sanitizeBarcode("' OR 1=1 --"), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode("<script>alert('xss')</script>"), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode("DROP TABLE products;"), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode("SELECT * FROM users"), isNull);
+      expect(BarcodeScannerSheet.sanitizeBarcode("barcode\x00malicious"), isNull);
     });
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../models/product.dart';
 import 'pos_product_card.dart';
 
@@ -64,6 +65,60 @@ class _PosProductCatalogState extends State<PosProductCatalog> {
     }).toList();
   }
 
+  Future<void> _openBarcodeScanner() async {
+    final scannedCode = await BarcodeScannerSheet.show(
+      context,
+      title: 'Scan Barcode Produk Kasir',
+    );
+
+    if (scannedCode == null || !mounted) return;
+
+    // Cari produk dengan barcode yang cocok (case-insensitive & trim)
+    final matchedProduct = widget.products.where((p) {
+      return p.barcode?.trim().toLowerCase() == scannedCode.toLowerCase() ||
+          p.id.toString() == scannedCode;
+    }).firstOrNull;
+
+    if (matchedProduct != null) {
+      widget.onAddToCart(matchedProduct);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(child: Text('+1 ${matchedProduct.name} ditambahkan')),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else {
+      _searchController.text = scannedCode;
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Barcode "$scannedCode" tidak ditemukan')),
+              ],
+            ),
+            backgroundColor: const Color(0xFFD32F2F),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.isLoading) {
@@ -100,35 +155,62 @@ class _PosProductCatalogState extends State<PosProductCatalog> {
           color: Colors.white,
           child: Column(
             children: [
-              // Kolom Pencarian
-              TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Cari produk POS atau barcode...',
-                  hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFD32F2F), size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
+              // Kolom Pencarian & Tombol Scan Barcode Kamera
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Cari produk POS atau barcode...',
+                        hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFFD32F2F), size: 20),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                      ),
+                    ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD32F2F),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD32F2F).withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      tooltip: 'Pindai Barcode Kamera',
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
+                      onPressed: _openBarcodeScanner,
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 10),
 

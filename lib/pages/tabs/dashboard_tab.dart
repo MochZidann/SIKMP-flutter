@@ -145,22 +145,9 @@ class _DashboardTabState extends State<DashboardTab> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Kopdes Merah Putih',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  user != null ? 'Kasir: ${user.name}' : 'Desa Maju Makmur',
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
-                ),
-              ],
+            const Text(
+              'Dashboard Kasir',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
@@ -187,7 +174,7 @@ class _DashboardTabState extends State<DashboardTab> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFD32F2F), Color(0xFF8E0000)],
+                  colors: [Color(0xFFD32F2F), Color(0xFF9A0007)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -195,7 +182,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFD32F2F).withValues(alpha: 0.35),
-                    blurRadius: 12,
+                    blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),
                 ],
@@ -208,11 +195,15 @@ class _DashboardTabState extends State<DashboardTab> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            child: const Icon(Icons.person_rounded, color: Colors.white),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 22),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -233,12 +224,20 @@ class _DashboardTabState extends State<DashboardTab> {
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: const Color(0xFF2E7D32),
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.circle, color: Colors.greenAccent, size: 8),
                             SizedBox(width: 6),
@@ -255,10 +254,47 @@ class _DashboardTabState extends State<DashboardTab> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Omset Penjualan Shift Ini',
+                    style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    todayStr,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    _isLoading ? 'Memuat...' : _currencyFormat.format(todayRevenue),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 13, color: Colors.white70),
+                            const SizedBox(width: 6),
+                            Text(
+                              todayStr,
+                              style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '$todayTransactions Struk Berhasil',
+                          style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
