@@ -6,6 +6,7 @@ import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
+import '../widgets/product_form_dialog.dart';
 import '../widgets/stock_adjust_dialog.dart';
 import '../widgets/stock_in_dialog.dart';
 
@@ -294,7 +295,7 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                   onTap: () => widget.onNavigateTab?.call(1),
                 ),
                 MetricCard(
-                  title: 'Stok Kritis (≤ 5)',
+                  title: 'Stok Kritis (< 5)',
                   value: '$lowStockCount Item',
                   icon: Icons.warning_amber_rounded,
                   color: Colors.amber.shade900,
@@ -330,44 +331,44 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
             Row(
               children: [
                 Expanded(
-                  flex: 5,
-                  child: ElevatedButton.icon(
-                    onPressed: _quickScanBarcode,
-                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                    label: const Text('Scan Barcode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE65100),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  child: _QuickActionButton(
+                    icon: Icons.add_box_rounded,
+                    label: 'Tambah Barang',
+                    color: const Color(0xFFE65100),
+                    onTap: () {
+                      ProductFormDialog.show(context, onProductSaved: _loadDashboardData);
+                    },
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  flex: 5,
-                  child: OutlinedButton.icon(
-                    onPressed: () => widget.onNavigateTab?.call(1),
-                    icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                    label: const Text('Katalog Stok', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFE65100),
-                      side: const BorderSide(color: Color(0xFFE65100)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  child: _QuickActionButton(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: 'Scan Barcode',
+                    color: const Color(0xFFD84315),
+                    onTap: _quickScanBarcode,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Katalog Stok',
+                    color: const Color(0xFF00897B),
+                    onTap: () => widget.onNavigateTab?.call(1),
                   ),
-                  child: IconButton(
-                    tooltip: 'Riwayat Mutasi',
-                    icon: const Icon(Icons.history_rounded, color: Color(0xFFE65100)),
-                    onPressed: () => widget.onNavigateTab?.call(2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.swap_vert_rounded,
+                    label: 'Riwayat Mutasi',
+                    color: const Color(0xFF5D4037),
+                    onTap: () => widget.onNavigateTab?.call(2),
                   ),
                 ),
               ],
@@ -479,6 +480,64 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.grey.shade800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

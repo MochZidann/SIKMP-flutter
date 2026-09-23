@@ -7,18 +7,22 @@ class StockItemCard extends StatelessWidget {
   final Product product;
   final VoidCallback onStockIn;
   final VoidCallback onStockAdjust;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const StockItemCard({
     super.key,
     required this.product,
     required this.onStockIn,
     required this.onStockAdjust,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isOutOfStock = product.stock <= 0;
-    final isLowStock = product.stock <= 5;
+    final isOutOfStock = product.isOutOfStock;
+    final isLowStock = product.isLowStock;
     final catColor = CategoryHelper.getColor(product.category);
 
     return Container(
@@ -69,16 +73,34 @@ class StockItemCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        (product.category ?? 'UMUM').toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: catColor,
-                          letterSpacing: 0.5,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              (product.category ?? 'UMUM').toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: catColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          if (product.purchasePrice > 0) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              'Modal: ${formatRupiah(product.purchasePrice)}',
+                              style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 3),
                       Text(
                         product.name,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -156,6 +178,41 @@ class StockItemCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                // More Menu Button (Edit & Hapus)
+                if (onEdit != null || onDelete != null)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded, size: 20, color: Colors.grey),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onSelected: (val) {
+                      if (val == 'edit') onEdit?.call();
+                      if (val == 'delete') onDelete?.call();
+                    },
+                    itemBuilder: (ctx) => [
+                      if (onEdit != null)
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE65100)),
+                              SizedBox(width: 10),
+                              Text('Edit Barang', style: TextStyle(fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      if (onDelete != null)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('Hapus Barang', style: TextStyle(fontSize: 13, color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 10),

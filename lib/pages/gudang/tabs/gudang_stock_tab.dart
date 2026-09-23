@@ -3,6 +3,7 @@ import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/product.dart';
 import '../../../services/gudang_service.dart';
+import '../widgets/product_form_dialog.dart';
 import '../widgets/stock_adjust_dialog.dart';
 import '../widgets/stock_in_dialog.dart';
 import '../widgets/stock_item_card.dart';
@@ -37,6 +38,8 @@ class _GudangStockTabState extends State<GudangStockTab> {
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
     final prods = await _gudangService.getProducts();
+    // Pastikan produk terbaru selalu berada di paling atas
+    prods.sort((a, b) => b.id.compareTo(a.id));
     if (mounted) {
       setState(() {
         _products = prods;
@@ -56,8 +59,8 @@ class _GudangStockTabState extends State<GudangStockTab> {
           category.contains(query);
 
       final matchesStock = _stockFilter == 'ALL' ||
-          (_stockFilter == 'LOW' && p.stock > 0 && p.stock <= 5) ||
-          (_stockFilter == 'OUT' && p.stock <= 0);
+          (_stockFilter == 'LOW' && p.isLowStock) ||
+          (_stockFilter == 'OUT' && p.isOutOfStock);
 
       return matchesQuery && matchesStock;
     }).toList();
@@ -96,8 +99,56 @@ class _GudangStockTabState extends State<GudangStockTab> {
     }
   }
 
+  void _confirmDeleteProduct(Product product) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Barang Ini?'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus "${product.name}"? Data barang yang sudah memiliki riwayat transaksi penjualan akan diproteksi demi keamanan pembukuan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final result = await _gudangService.deleteProduct(product.id);
+              if (mounted) {
+                if (result['success'] == true) {
+                  _loadProducts();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result['message'] ?? 'Barang berhasil dihapus'),
+                      backgroundColor: Colors.green.shade700,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result['message'] ?? 'Gagal menghapus barang'),
+                      backgroundColor: Colors.red.shade700,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Ya, Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lowCount = _products.where((p) => p.isLowStock).length;
+    final outCount = _products.where((p) => p.isOutOfStock).length;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
@@ -171,7 +222,10 @@ class _GudangStockTabState extends State<GudangStockTab> {
                   children: [
                     ChoiceChip(
                       showCheckmark: false,
-                      label: const Text('Semua Stok', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: Text(
+                        'Semua (${_products.length})',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
                       selected: _stockFilter == 'ALL',
                       selectedColor: const Color(0xFFE65100),
                       labelStyle: TextStyle(color: _stockFilter == 'ALL' ? Colors.white : const Color(0xFF333333)),
@@ -181,7 +235,10 @@ class _GudangStockTabState extends State<GudangStockTab> {
                     const SizedBox(width: 8),
                     ChoiceChip(
                       showCheckmark: false,
-                      label: const Text('Kritis (≤ 5)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: Text(
+                        'Kritis (< 5) ($lowCount)',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
                       selected: _stockFilter == 'LOW',
                       selectedColor: Colors.amber.shade900,
                       labelStyle: TextStyle(color: _stockFilter == 'LOW' ? Colors.white : const Color(0xFF333333)),
@@ -191,7 +248,10 @@ class _GudangStockTabState extends State<GudangStockTab> {
                     const SizedBox(width: 8),
                     ChoiceChip(
                       showCheckmark: false,
-                      label: const Text('Habis (0)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: Text(
+                        'Habis ($outCount)',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
                       selected: _stockFilter == 'OUT',
                       selectedColor: Colors.red.shade700,
                       labelStyle: TextStyle(color: _stockFilter == 'OUT' ? Colors.white : const Color(0xFF333333)),
@@ -221,7 +281,7 @@ class _GudangStockTabState extends State<GudangStockTab> {
                         color: const Color(0xFFE65100),
                         onRefresh: _loadProducts,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                           itemCount: _filteredProducts.length,
                           itemBuilder: (context, index) {
                             final product = _filteredProducts[index];
@@ -241,12 +301,36 @@ class _GudangStockTabState extends State<GudangStockTab> {
                                   onStockUpdated: _loadProducts,
                                 );
                               },
+                              onEdit: () {
+                                ProductFormDialog.show(
+                                  context,
+                                  product: product,
+                                  onProductSaved: _loadProducts,
+                                );
+                              },
+                              onDelete: () => _confirmDeleteProduct(product),
                             );
                           },
                         ),
                       ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFE65100),
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        tooltip: 'Tambah Barang',
+        onPressed: () {
+          ProductFormDialog.show(
+            context,
+            onProductSaved: () {
+              _searchController.clear();
+              _loadProducts();
+            },
+          );
+        },
+        child: const Icon(Icons.add_rounded, size: 28),
       ),
     );
   }

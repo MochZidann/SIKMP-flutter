@@ -31,6 +31,8 @@ class _GudangMainPageState extends State<GudangMainPage> {
         return 'Katalog Stok Gudang';
       case 2:
         return 'Riwayat Mutasi Stok';
+      case 3:
+        return 'Kategori Produk';
       case 0:
       default:
         return 'Dashboard Gudang';
