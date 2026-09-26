@@ -66,57 +66,26 @@ class _PosProductCatalogState extends State<PosProductCatalog> {
   }
 
   Future<void> _openBarcodeScanner() async {
-    final scannedCode = await BarcodeScannerSheet.show(
+    await BarcodeScannerSheet.show(
       context,
-      title: 'Scan Barcode Produk Kasir',
+      title: 'Scan Produk Kasir',
+      isContinuous: true,
+      onScanned: (scannedCode) async {
+        final matchedProduct = widget.products.where((p) {
+          return p.barcode?.trim().toLowerCase() == scannedCode.toLowerCase() ||
+              p.id.toString() == scannedCode;
+        }).firstOrNull;
+
+        if (matchedProduct != null) {
+          widget.onAddToCart(matchedProduct);
+          return '+1 ${matchedProduct.name} (Rp ${matchedProduct.price})';
+        } else {
+          _searchController.text = scannedCode;
+          setState(() {});
+          return null;
+        }
+      },
     );
-
-    if (scannedCode == null || !mounted) return;
-
-    // Cari produk dengan barcode yang cocok (case-insensitive & trim)
-    final matchedProduct = widget.products.where((p) {
-      return p.barcode?.trim().toLowerCase() == scannedCode.toLowerCase() ||
-          p.id.toString() == scannedCode;
-    }).firstOrNull;
-
-    if (matchedProduct != null) {
-      widget.onAddToCart(matchedProduct);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(child: Text('+1 ${matchedProduct.name} ditambahkan')),
-              ],
-            ),
-            backgroundColor: const Color(0xFF2E7D32),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } else {
-      _searchController.text = scannedCode;
-      setState(() {});
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Barcode "$scannedCode" tidak ditemukan')),
-              ],
-            ),
-            backgroundColor: const Color(0xFFD32F2F),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
   }
 
   @override

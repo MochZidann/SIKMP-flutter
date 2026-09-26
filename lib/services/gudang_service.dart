@@ -59,12 +59,16 @@ class GudangService {
   }
 
   /// Menambahkan barang baru ke katalog gudang
-  Future<Map<String, dynamic>> storeProduct(Product product, {int? userId}) async {
+  Future<Map<String, dynamic>> storeProduct(
+    Product product, {
+    int? userId,
+    String? imageBase64,
+  }) async {
     try {
       final currentUserId = userId ?? AuthService().currentUser?.id ?? 1;
       final uri = Uri.parse('$gudangBaseUrl/products');
 
-      final payload = {
+      final payload = <String, dynamic>{
         'name': product.name.trim(),
         'barcode': (product.barcode != null && product.barcode!.trim().isNotEmpty)
             ? product.barcode!.trim()
@@ -75,6 +79,7 @@ class GudangService {
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
+        if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
       };
 
       final response = await http.post(
@@ -106,12 +111,17 @@ class GudangService {
   }
 
   /// Memperbarui data produk yang ada
-  Future<Map<String, dynamic>> updateProduct(Product product, {int? userId}) async {
+  Future<Map<String, dynamic>> updateProduct(
+    Product product, {
+    int? userId,
+    String? imageBase64,
+    bool removeImage = false,
+  }) async {
     try {
       final currentUserId = userId ?? AuthService().currentUser?.id ?? 1;
       final uri = Uri.parse('$gudangBaseUrl/products/${product.id}');
 
-      final payload = {
+      final payload = <String, dynamic>{
         'name': product.name.trim(),
         'barcode': (product.barcode != null && product.barcode!.trim().isNotEmpty)
             ? product.barcode!.trim()
@@ -122,6 +132,8 @@ class GudangService {
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
+        if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
+        if (removeImage) 'remove_image': true,
       };
 
       final response = await http.put(
@@ -414,7 +426,7 @@ class GudangService {
         'outOfStockCount': outOfStockCount,
         'totalValuation': totalValuation,
         'todayMovements': todayMovements,
-        'recentMovements': movements.take(6).toList(),
+        'recentMovements': movements.take(5).toList(),
       };
     } catch (e) {
       debugPrint('GudangService _fallbackInventoryStats error: $e');

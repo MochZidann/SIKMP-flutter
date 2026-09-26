@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_kop/core/widgets/barcode_scanner_sheet.dart';
+import 'package:flutter_kop/core/widgets/product_image_widget.dart';
 import 'package:flutter_kop/models/product.dart';
 import 'package:flutter_kop/services/gudang_service.dart';
 
@@ -103,6 +104,25 @@ void main() {
 
       // Default minimumStock is 5
       expect(pLow4.minimumStock, 5);
+    });
+
+    test('ProductImageWidget resolveUrl handles relative, full http, and storage paths', () {
+      expect(ProductImageWidget.resolveUrl(null), isNull);
+      expect(ProductImageWidget.resolveUrl(''), isNull);
+      expect(ProductImageWidget.resolveUrl('   '), isNull);
+      expect(ProductImageWidget.resolveUrl('http://example.com/foto.jpg'), 'http://example.com/foto.jpg');
+      expect(ProductImageWidget.resolveUrl('https://example.com/foto.jpg'), 'https://example.com/foto.jpg');
+
+      final resolvedRelative = ProductImageWidget.resolveUrl('products/mie.jpg');
+      expect(resolvedRelative, contains('/storage/products/mie.jpg'));
+
+      final resolvedWithSlash = ProductImageWidget.resolveUrl('/storage/products/mie.jpg');
+      expect(resolvedWithSlash, contains('/storage/products/mie.jpg'));
+      expect(resolvedWithSlash, isNot(contains('/storage//storage')));
+
+      final resolvedWithStorage = ProductImageWidget.resolveUrl('storage/products/mie.jpg');
+      expect(resolvedWithStorage, contains('/storage/products/mie.jpg'));
+      expect(resolvedWithStorage, isNot(contains('/storage/storage')));
     });
   });
 }

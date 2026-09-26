@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
+import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/gudang_service.dart';
@@ -47,6 +50,12 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
   bool _isSaving = false;
   List<String> _categorySuggestions = [];
+
+  // ── MANAJEMEN FOTO BARANG ──────────────────────────────────────
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _pickedImageBytes;
+  String? _pickedImageBase64;
+  bool _removeImage = false;
 
   bool get _isEdit => widget.product != null;
 
@@ -108,6 +117,193 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     }
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        final length = await image.length();
+        // Keamanan & Performa: Batasi foto maksimal 5MB sebelum diproses
+        if (length > 5 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Ukuran foto terlalu besar (maksimal 5MB). Silakan gunakan foto yang lebih kecil.'),
+                backgroundColor: Color(0xFFC62828),
+              ),
+            );
+          }
+          return;
+        }
+
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _pickedImageBytes = bytes;
+          _pickedImageBase64 = base64Encode(bytes);
+          _removeImage = false;
+        });
+      }
+    } on MissingPluginException {
+      if (mounted) {
+        _showRestartNoticeDialog();
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      final errorStr = e.toString();
+      if (errorStr.contains('MissingPluginException')) {
+        if (mounted) _showRestartNoticeDialog();
+        return;
+      }
+
+      String message = 'Gagal memilih foto: $e';
+      if (errorStr.contains('permission') || errorStr.contains('denied')) {
+        message = 'Izin kamera / galeri ditolak. Harap izinkan akses kamera pada pengaturan aplikasi.';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showRestartNoticeDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.restart_alt_rounded, color: Color(0xFFE65100), size: 28),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Perlu Restart Aplikasi',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Plugin kamera & galeri baru saja dipasang ke dalam kode Flutter.\n\n'
+          'Karena Android memerlukan pendaftaran channel native yang baru di APK, Hot Reload tidak dapat menerapkannya saat aplikasi sedang aktif.\n\n'
+          'Silakan STOP debug / tutup aplikasi sepenuhnya, lalu jalankan kembali (flutter run).',
+          style: TextStyle(fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE65100),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pilih Sumber Foto Barang',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE65100).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFE65100)),
+                ),
+                title: const Text('Ambil dari Kamera', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Foto langsung menggunakan kamera perangkat'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: Colors.blue),
+                ),
+                title: const Text('Pilih dari Galeri', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Pilih foto barang dari galeri perangkat'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              if (_pickedImageBytes != null ||
+                  (!_removeImage &&
+                      widget.product?.imagePath != null &&
+                      widget.product!.imagePath!.isNotEmpty)) ...[
+                const Divider(),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  ),
+                  title: const Text('Hapus Foto', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Hapus foto dari barang ini'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _pickedImageBytes = null;
+                      _pickedImageBase64 = null;
+                      _removeImage = true;
+                    });
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -131,8 +327,17 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     );
 
     final result = _isEdit
-        ? await _gudangService.updateProduct(productData, userId: currentUserId)
-        : await _gudangService.storeProduct(productData, userId: currentUserId);
+        ? await _gudangService.updateProduct(
+            productData,
+            userId: currentUserId,
+            imageBase64: _pickedImageBase64,
+            removeImage: _removeImage,
+          )
+        : await _gudangService.storeProduct(
+            productData,
+            userId: currentUserId,
+            imageBase64: _pickedImageBase64,
+          );
 
     if (mounted) {
       setState(() => _isSaving = false);
@@ -210,6 +415,9 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 const SizedBox(height: 16),
                 const Divider(height: 1),
                 const SizedBox(height: 16),
+
+                // ── UPLOAD FOTO PRODUK ─────────────────────────────────
+                _buildImagePickerSection(),
 
                 // ── INPUT BARCODE DENGAN SCANNER KAMERA ─────────────────
                 TextFormField(
@@ -387,4 +595,186 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       ),
     );
   }
+
+  Widget _buildImagePickerSection() {
+    final hasNewImage = _pickedImageBytes != null;
+    final hasExistingImage = !_removeImage &&
+        widget.product?.imagePath != null &&
+        widget.product!.imagePath!.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: (hasNewImage || hasExistingImage)
+              ? const Color(0xFFE65100).withValues(alpha: 0.4)
+              : Colors.grey.shade300,
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Preview Thumbnail
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 64,
+              height: 64,
+              child: hasNewImage
+                  ? Image.memory(
+                      _pickedImageBytes!,
+                      fit: BoxFit.cover,
+                    )
+                  : hasExistingImage
+                      ? ProductImageWidget(
+                          imagePath: widget.product!.imagePath,
+                          category: _categoryCtrl.text,
+                          size: 64,
+                          borderRadius: BorderRadius.circular(10),
+                        )
+                      : Container(
+                          color: const Color(0xFFE65100).withValues(alpha: 0.1),
+                          child: const Icon(
+                            Icons.add_a_photo_outlined,
+                            color: Color(0xFFE65100),
+                            size: 28,
+                          ),
+                        ),
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Action Info & Buttons
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      hasNewImage
+                          ? 'Foto Baru Dipilih'
+                          : hasExistingImage
+                              ? 'Foto Barang Aktif'
+                              : 'Foto Produk (Opsional)',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (hasNewImage) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.green.shade400, width: 0.5),
+                        ),
+                        child: Text(
+                          'BARU',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  (hasNewImage || hasExistingImage)
+                      ? 'Format JPG/PNG, tampil di katalog & kasir'
+                      : 'Ambil foto dari kamera atau galeri',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: _isSaving ? null : _showImagePickerOptions,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE65100),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              (hasNewImage || hasExistingImage)
+                                  ? Icons.cameraswitch_rounded
+                                  : Icons.camera_alt_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              (hasNewImage || hasExistingImage) ? 'Ganti Foto' : 'Pilih Foto',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (hasNewImage || hasExistingImage) ...[
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _isSaving
+                            ? null
+                            : () {
+                                setState(() {
+                                  _pickedImageBytes = null;
+                                  _pickedImageBase64 = null;
+                                  _removeImage = true;
+                                });
+                              },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.delete_outline_rounded,
+                                  color: Colors.red.shade700, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Hapus',
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

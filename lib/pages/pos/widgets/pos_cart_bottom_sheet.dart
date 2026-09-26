@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/category_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
 
 class PosCartBottomSheet extends StatefulWidget {
@@ -187,19 +187,11 @@ class _PosCartBottomSheetState extends State<PosCartBottomSheet> {
 
                       return Row(
                         children: [
-                          // Leading Category Avatar
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: CategoryHelper.getColor(p.category).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              CategoryHelper.getIcon(p.category),
-                              color: CategoryHelper.getColor(p.category),
-                              size: 22,
-                            ),
+                          // Product Image / Category Icon
+                          ProductImageWidget.fromProduct(
+                            product: p,
+                            size: 44,
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           const SizedBox(width: 12),
 

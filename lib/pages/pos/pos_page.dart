@@ -53,9 +53,9 @@ class PosPageState extends State<PosPage> {
   }
 
   /// Pindai & tambahkan produk ke keranjang berdasarkan kode barcode atau ID
-  Future<void> addProductByBarcode(String scannedCode) async {
+  Future<Product?> addProductByBarcode(String scannedCode) async {
     final cleanCode = scannedCode.trim().toLowerCase();
-    if (cleanCode.isEmpty) return;
+    if (cleanCode.isEmpty) return null;
 
     if (_products.isEmpty) {
       await _loadProducts();
@@ -66,7 +66,7 @@ class PosPageState extends State<PosPage> {
           p.id.toString() == cleanCode;
     }).firstOrNull;
 
-    if (!mounted) return;
+    if (!mounted) return matched;
 
     if (matched != null) {
       setState(() {
@@ -92,6 +92,7 @@ class PosPageState extends State<PosPage> {
           duration: const Duration(seconds: 2),
         ),
       );
+      return matched;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -109,6 +110,7 @@ class PosPageState extends State<PosPage> {
           duration: const Duration(seconds: 3),
         ),
       );
+      return null;
     }
   }
 

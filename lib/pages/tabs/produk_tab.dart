@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/widgets/product_image_widget.dart';
 import '../../models/product.dart';
 import '../../services/pos_service.dart';
 
@@ -261,14 +262,10 @@ class _ProdukTabState extends State<ProdukTab> {
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 6),
-                              leading: CircleAvatar(
-                                radius: 22,
-                                backgroundColor: Colors.red.shade50,
-                                child: const Icon(
-                                  Icons.inventory_2_outlined,
-                                  color: Color(0xFFD32F2F),
-                                  size: 22,
-                                ),
+                              leading: ProductImageWidget.fromProduct(
+                                product: p,
+                                size: 44,
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               title: Text(
                                 p.name,

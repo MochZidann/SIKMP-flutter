@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/utils/category_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
-import '../../../services/pos_service.dart';
 
 class PosProductCard extends StatelessWidget {
   final Product product;
@@ -138,20 +138,15 @@ class PosProductCard extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (product.imagePath != null && product.imagePath!.isNotEmpty)
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
-                          child: Image.network(
-                            product.imagePath!.startsWith('http')
-                                ? product.imagePath!
-                                : '${PosService.baseUrl.replaceAll('/api/pos', '')}/storage/${product.imagePath}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildCategoryPlaceholder(product, catColor),
-                          ),
-                        )
-                      else
-                        _buildCategoryPlaceholder(product, catColor),
+                      ProductImageWidget.fromProduct(
+                        product: product,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+                        fallbackColor: catColor,
+                        placeholder: _buildCategoryPlaceholder(product, catColor),
+                      ),
 
                       // Badge Stok di Kiri Atas
                       Positioned(

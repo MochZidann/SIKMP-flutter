@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/category_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
 
 class StockItemCard extends StatelessWidget {
@@ -52,19 +53,11 @@ class StockItemCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Category Icon Avatar
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: catColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    CategoryHelper.getIcon(product.category),
-                    color: catColor,
-                    size: 22,
-                  ),
+                // Product Image / Category Icon
+                ProductImageWidget.fromProduct(
+                  product: product,
+                  size: 44,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 const SizedBox(width: 12),
 

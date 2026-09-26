@@ -32,16 +32,9 @@ class _KasirMainPageState extends State<KasirMainPage> {
     });
   }
 
-  /// Aksi Scan Barcode Kamera Kasir
+  /// Aksi Scan Barcode Kamera Kasir (Mode Beruntun / Banyak Barang)
   Future<void> _openBarcodeScanner() async {
     HapticFeedback.mediumImpact();
-
-    final scannedCode = await BarcodeScannerSheet.show(
-      context,
-      title: 'Scan Barcode Produk Kasir',
-    );
-
-    if (scannedCode == null || !mounted) return;
 
     // Otomatis arahkan ke tab POS (index 1) agar kasir langsung melihat ringkasan item & struk
     if (_currentIndex != 1) {
@@ -50,10 +43,19 @@ class _KasirMainPageState extends State<KasirMainPage> {
       });
     }
 
-    // Masukkan produk hasil scan ke transaksi POS kasir
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _posKey.currentState?.addProductByBarcode(scannedCode);
-    });
+    // Buka scanner dengan mode continuous (kamera tetap menyala untuk banyak barang)
+    await BarcodeScannerSheet.show(
+      context,
+      title: 'Scan Produk Kasir',
+      isContinuous: true,
+      onScanned: (scannedCode) async {
+        final product = await _posKey.currentState?.addProductByBarcode(scannedCode);
+        if (product != null) {
+          return '+1 ${product.name} (Rp ${product.price})';
+        }
+        return null;
+      },
+    );
   }
 
   @override

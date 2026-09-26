@@ -3,7 +3,6 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
-import '../../../core/widgets/metric_card.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
 import '../widgets/product_form_dialog.dart';
@@ -173,6 +172,7 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
     final totalValuation = _stats['totalValuation'] ?? 0;
     final todayMovements = _stats['todayMovements'] ?? 0;
     final recentMovements = _stats['recentMovements'] as List<StockMovement>? ?? [];
+    final displayedMovements = recentMovements.take(5).toList();
 
     return RefreshIndicator(
       color: const Color(0xFFE65100),
@@ -272,53 +272,73 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
             ),
             const SizedBox(height: 20),
 
-            // ── GRID METRIK INVENTARIS ──────────────────────────────────
+            // ── METRIK STATUS INVENTARIS (KOMPAK SEPERTI KASIR) ─────────
             const Text(
               'Status Inventaris',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2B2B2B),
+              ),
             ),
-            const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.15,
-              children: [
-                MetricCard(
-                  title: 'Total Varian Barang',
-                  value: '$totalProducts SKU',
-                  icon: Icons.inventory_2_rounded,
-                  color: const Color(0xFFE65100),
-                  subtitle: 'Katalog Aktif',
-                  onTap: () => widget.onNavigateTab?.call(1),
-                ),
-                MetricCard(
-                  title: 'Stok Kritis (< 5)',
-                  value: '$lowStockCount Item',
-                  icon: Icons.warning_amber_rounded,
-                  color: Colors.amber.shade900,
-                  subtitle: lowStockCount > 0 ? 'Perlu Restock' : 'Aman',
-                  onTap: () => widget.onNavigateTab?.call(1),
-                ),
-                MetricCard(
-                  title: 'Stok Habis (0)',
-                  value: '$outOfStockCount Item',
-                  icon: Icons.remove_shopping_cart_rounded,
-                  color: Colors.red.shade700,
-                  subtitle: outOfStockCount > 0 ? 'Segera Pesan' : 'Nihil',
-                  onTap: () => widget.onNavigateTab?.call(1),
-                ),
-                MetricCard(
-                  title: 'Mutasi Stok',
-                  value: '$todayMovements Kali',
-                  icon: Icons.swap_vert_rounded,
-                  color: const Color(0xFF00897B),
-                  subtitle: 'Hari Ini',
-                  onTap: () => widget.onNavigateTab?.call(2),
-                ),
-              ],
+            const SizedBox(height: 10),
+
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      title: 'Total Varian Barang',
+                      value: '$totalProducts SKU',
+                      icon: Icons.inventory_2_rounded,
+                      color: const Color(0xFFE65100),
+                      subtitle: 'Katalog Aktif',
+                      onTap: () => widget.onNavigateTab?.call(1),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildMetricTile(
+                      title: 'Stok Kritis (< 5)',
+                      value: '$lowStockCount Item',
+                      icon: Icons.warning_amber_rounded,
+                      color: Colors.amber.shade900,
+                      subtitle: lowStockCount > 0 ? 'Perlu Restock' : 'Aman',
+                      onTap: () => widget.onNavigateTab?.call(1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      title: 'Stok Habis (0)',
+                      value: '$outOfStockCount Item',
+                      icon: Icons.remove_shopping_cart_rounded,
+                      color: Colors.red.shade700,
+                      subtitle: outOfStockCount > 0 ? 'Segera Pesan' : 'Nihil',
+                      onTap: () => widget.onNavigateTab?.call(1),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildMetricTile(
+                      title: 'Mutasi Stok',
+                      value: '$todayMovements Kali',
+                      icon: Icons.swap_vert_rounded,
+                      color: const Color(0xFF00897B),
+                      subtitle: 'Hari Ini',
+                      onTap: () => widget.onNavigateTab?.call(2),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -390,7 +410,7 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
               ],
             ),
             const SizedBox(height: 8),
-            if (recentMovements.isEmpty)
+            if (displayedMovements.isEmpty)
               const EmptyDataView(
                 icon: Icons.swap_vert_rounded,
                 title: 'Belum Ada Mutasi Stok',
@@ -400,10 +420,10 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: recentMovements.length,
+                itemCount: displayedMovements.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
-                  final move = recentMovements[index];
+                  final move = displayedMovements[index];
                   final isIn = move.isIn;
                   final isAdjust = move.isAdjust;
 
@@ -480,6 +500,95 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricTile({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: color, size: 18),
+                  ),
+                  if (subtitle != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF2B2B2B),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
