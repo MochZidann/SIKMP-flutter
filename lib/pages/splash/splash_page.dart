@@ -110,27 +110,13 @@ class _SplashPageState extends State<SplashPage>
                   scale: _scaleAnimation,
                   child: Column(
                     children: [
-                      // Lingkaran Putih Logo
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.storefront_rounded,
-                          color: Color(0xFFD32F2F),
-                          size: 72,
-                        ),
+                      // Logo Resmi SIKMP KOP DES KEL
+                      Image.asset(
+                        'assets/images/sikmp_white.png',
+                        height: 130,
+                        fit: BoxFit.contain,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Teks Brand
                       const Text(

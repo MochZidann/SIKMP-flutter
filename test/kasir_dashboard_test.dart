@@ -40,7 +40,7 @@ void main() {
       );
 
       // Verify header and section titles
-      expect(find.text('Dashboard Kasir'), findsOneWidget);
+      expect(find.text('Kasir'), findsOneWidget);
       expect(find.text('Ringkasan Penjualan Hari Ini'), findsOneWidget);
       expect(find.text('Aksi Kasir Cepat'), findsOneWidget);
       expect(find.text('Transaksi Terbaru'), findsOneWidget);

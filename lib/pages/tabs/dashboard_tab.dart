@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/widgets/app_top_bar_title.dart';
 import '../../models/sale_record.dart';
 import '../../services/auth_service.dart';
 import '../../services/pos_service.dart';
@@ -148,27 +149,7 @@ class _DashboardTabState extends State<DashboardTab> {
         backgroundColor: const Color(0xFFD32F2F),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                color: Color(0xFFD32F2F),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Dashboard Kasir',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
+        title: const AppTopBarTitle(roleName: 'Kasir'),
         actions: [
           IconButton(
             tooltip: 'Logout',

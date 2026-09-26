@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_top_bar_title.dart';
 import '../../models/product.dart';
 import '../../models/qris_response.dart';
 import '../../services/pos_service.dart';
@@ -284,27 +285,7 @@ class PosPageState extends State<PosPage> {
         backgroundColor: const Color(0xFFD32F2F),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                color: Color(0xFFD32F2F),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Kasir POS',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
+        title: const AppTopBarTitle(roleName: 'Kasir'),
         actions: [
           if (_cart.isNotEmpty)
             IconButton(

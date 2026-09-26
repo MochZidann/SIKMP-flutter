@@ -97,8 +97,8 @@ class _KasirMainPageState extends State<KasirMainPage> {
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.4),
-            width: 3,
+            color: Colors.white.withValues(alpha: 0.85),
+            width: 4.5,
           ),
         ),
         child: Material(
@@ -201,25 +201,12 @@ class _KasirMainPageState extends State<KasirMainPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.symmetric(
-                horizontal: isSelected ? 16 : 8,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? primaryColor.withValues(alpha: 0.12)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                isSelected ? selectedIcon : icon,
-                color: isSelected ? primaryColor : unselectedColor,
-                size: 22,
-              ),
+            Icon(
+              isSelected ? selectedIcon : icon,
+              color: isSelected ? primaryColor : unselectedColor,
+              size: 24,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               label,
               maxLines: 1,

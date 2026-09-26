@@ -42,6 +42,18 @@ void main() {
       final formatted = DateHelper.formatEpochMs(epoch, withTime: false);
       expect(formatted, contains('2026'));
     });
+
+    test('getTimeGreeting returns appropriate greeting based on hour', () {
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 6, 0)), equals('Selamat Pagi,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 10, 59)), equals('Selamat Pagi,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 11, 0)), equals('Selamat Siang,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 14, 59)), equals('Selamat Siang,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 15, 0)), equals('Selamat Sore,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 17, 59)), equals('Selamat Sore,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 18, 0)), equals('Selamat Malam,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 23, 0)), equals('Selamat Malam,'));
+      expect(DateHelper.getTimeGreeting(DateTime(2026, 9, 26, 2, 0)), equals('Selamat Malam,'));
+    });
   });
 
   group('Domain Models Tests', () {

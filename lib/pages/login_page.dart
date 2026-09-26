@@ -311,27 +311,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
 
-                  // Logo Koperasi
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.storefront_rounded,
-                      color: Color(0xFFD32F2F),
-                      size: 48,
-                    ),
+                  // Logo Resmi SIKMP KOP DES KEL
+                  Image.asset(
+                    'assets/images/sikmp_white.png',
+                    height: 100,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   const Text(
                     'KOPDES MERAH PUTIH',
                     style: TextStyle(

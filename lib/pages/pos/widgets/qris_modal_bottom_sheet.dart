@@ -295,10 +295,14 @@ class _QrisModalBottomSheetState extends State<QrisModalBottomSheet> {
                         // Badge Brand Koperasi & GPN/QRIS
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.storefront_rounded, size: 16, color: Color(0xFFD32F2F)),
-                            SizedBox(width: 6),
-                            Text(
+                          children: [
+                            Image.asset(
+                              'assets/images/sikmp.png',
+                              height: 18,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
                               'KOPDES MERAH PUTIH',
                               style: TextStyle(
                                 fontSize: 12,

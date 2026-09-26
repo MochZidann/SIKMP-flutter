@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
 import '../pos/widgets/pos_settings_dialog.dart';
@@ -23,20 +24,6 @@ class _GudangMainPageState extends State<GudangMainPage> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-  }
-
-  String get _appBarTitle {
-    switch (_currentIndex) {
-      case 1:
-        return 'Katalog Stok Gudang';
-      case 2:
-        return 'Riwayat Mutasi Stok';
-      case 3:
-        return 'Kategori Produk';
-      case 0:
-      default:
-        return 'Dashboard Gudang';
-    }
   }
 
   void _onTabTapped(int index) {
@@ -83,27 +70,7 @@ class _GudangMainPageState extends State<GudangMainPage> {
         backgroundColor: const Color(0xFFE65100),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                color: Color(0xFFE65100),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              _appBarTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
+        title: const AppTopBarTitle(roleName: 'Admin Gudang'),
         actions: [
           IconButton(
             tooltip: 'Pengaturan API Server',
@@ -143,7 +110,7 @@ class _GudangMainPageState extends State<GudangMainPage> {
           data: NavigationBarThemeData(
             height: 68,
             backgroundColor: Colors.white,
-            indicatorColor: const Color(0xFFFFE0B2),
+            indicatorColor: Colors.transparent,
             labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(

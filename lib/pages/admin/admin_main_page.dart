@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
 import '../pos/widgets/pos_settings_dialog.dart';
@@ -23,20 +24,6 @@ class _AdminMainPageState extends State<AdminMainPage> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-  }
-
-  String get _appBarTitle {
-    switch (_currentIndex) {
-      case 1:
-        return 'Kelola Pengguna';
-      case 2:
-        return 'Anggota Koperasi';
-      case 3:
-        return 'Audit Log';
-      case 0:
-      default:
-        return 'Dashboard Admin';
-    }
   }
 
   void _onTabTapped(int index) {
@@ -83,27 +70,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
         backgroundColor: const Color(0xFF1976D2),
         elevation: 0,
         foregroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                color: Color(0xFF1976D2),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              _appBarTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
+        title: const AppTopBarTitle(roleName: 'Admin Sistem'),
         actions: [
           IconButton(
             tooltip: 'Pengaturan API Server',
@@ -143,7 +110,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
           data: NavigationBarThemeData(
             height: 68,
             backgroundColor: Colors.white,
-            indicatorColor: const Color(0xFFE3F2FD),
+            indicatorColor: Colors.transparent,
             labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(
