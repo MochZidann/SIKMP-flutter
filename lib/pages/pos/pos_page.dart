@@ -16,10 +16,10 @@ class PosPage extends StatefulWidget {
   const PosPage({super.key, this.isEmbedded = false});
 
   @override
-  State<PosPage> createState() => _PosPageState();
+  PosPageState createState() => PosPageState();
 }
 
-class _PosPageState extends State<PosPage> {
+class PosPageState extends State<PosPage> {
   final PosService _posService = PosService();
 
   List<Product> _products = [];
@@ -42,6 +42,73 @@ class _PosPageState extends State<PosPage> {
         _products = prods;
         _isLoadingProducts = false;
       });
+    }
+  }
+
+  /// Tambah kuantitas produk ke keranjang POS
+  void addToCart(Product product) {
+    setState(() {
+      _cart[product.id] = (_cart[product.id] ?? 0) + 1;
+    });
+  }
+
+  /// Pindai & tambahkan produk ke keranjang berdasarkan kode barcode atau ID
+  Future<void> addProductByBarcode(String scannedCode) async {
+    final cleanCode = scannedCode.trim().toLowerCase();
+    if (cleanCode.isEmpty) return;
+
+    if (_products.isEmpty) {
+      await _loadProducts();
+    }
+
+    final matched = _products.where((p) {
+      return (p.barcode != null && p.barcode!.trim().toLowerCase() == cleanCode) ||
+          p.id.toString() == cleanCode;
+    }).firstOrNull;
+
+    if (!mounted) return;
+
+    if (matched != null) {
+      setState(() {
+        _cart[matched.id] = (_cart[matched.id] ?? 0) + 1;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${matched.name} ditambahkan ke keranjang (+1)',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF2E7D32),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Barcode "$scannedCode" tidak ditemukan di katalog POS'),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFD32F2F),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -303,6 +370,7 @@ class _PosPageState extends State<PosPage> {
         isBusy: _isGenerating,
         isProcessingCash: false,
         isGeneratingQris: _isGenerating,
+        isEmbedded: widget.isEmbedded,
         onOpenCart: _showCartDetailsBottomSheet,
         onCashPayment: _handleCashPayment,
         onQrisPayment: _handleGenerateQris,

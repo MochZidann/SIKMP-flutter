@@ -8,6 +8,7 @@ class PosCheckoutBar extends StatelessWidget {
   final bool isBusy;
   final bool isProcessingCash;
   final bool isGeneratingQris;
+  final bool isEmbedded;
   final VoidCallback onOpenCart;
   final VoidCallback onCashPayment;
   final VoidCallback onQrisPayment;
@@ -20,6 +21,7 @@ class PosCheckoutBar extends StatelessWidget {
     required this.isBusy,
     required this.isProcessingCash,
     required this.isGeneratingQris,
+    this.isEmbedded = false,
     required this.onOpenCart,
     required this.onCashPayment,
     required this.onQrisPayment,
@@ -32,7 +34,7 @@ class PosCheckoutBar extends StatelessWidget {
     // Tampilan bila keranjang masih kosong
     if (totalItems <= 0) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: isEmbedded ? 14 : 10),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -95,7 +97,7 @@ class PosCheckoutBar extends StatelessWidget {
 
     // Tampilan bila keranjang ada isinya
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      padding: EdgeInsets.fromLTRB(16, 10, 16, isEmbedded ? 22 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
