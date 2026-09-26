@@ -312,7 +312,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     final currentUserId = AuthService().currentUser?.id;
     final price = int.tryParse(_priceCtrl.text.trim()) ?? 0;
     final purchasePrice = int.tryParse(_purchasePriceCtrl.text.trim()) ?? 0;
-    final stock = int.tryParse(_stockCtrl.text.trim()) ?? 0;
+    // Pada mode edit, stok dipertahankan dari data asli (tidak diubah langsung)
+    final stock = _isEdit
+        ? (widget.product?.stock ?? 0)
+        : (int.tryParse(_stockCtrl.text.trim()) ?? 0);
 
     final productData = Product(
       id: widget.product?.id ?? 0,
@@ -322,7 +325,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       price: price,
       purchasePrice: purchasePrice,
       stock: stock,
-      minimumStock: 5,
+      minimumStock: widget.product?.minimumStock ?? 5,
       imagePath: widget.product?.imagePath,
     );
 
@@ -537,27 +540,29 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-
-                // ── JUMLAH STOK BARANG ────────────────────────────────
-                TextFormField(
-                  controller: _stockCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: _isEdit ? 'Stok Barang' : 'Stok Awal',
-                    hintText: 'Masukkan jumlah stok...',
-                    prefixIcon: const Icon(Icons.warehouse_rounded, color: Color(0xFFE65100), size: 20),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                // ── JUMLAH STOK AWAL (HANYA SAAT TAMBAH BARANG BARU) ──
+                if (!_isEdit) ...[
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _stockCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Stok Awal Barang *',
+                      hintText: 'Masukkan jumlah stok awal...',
+                      helperText: 'Hanya diisi saat awal pendaftaran master barang',
+                      prefixIcon: const Icon(Icons.warehouse_rounded, color: Color(0xFFE65100), size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Isi stok awal (min 0)';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Isi stok (min 0)';
-                    }
-                    return null;
-                  },
-                ),
+                ],
                 const SizedBox(height: 22),
 
                 // ── ACTION BUTTONS ─────────────────────────────────────

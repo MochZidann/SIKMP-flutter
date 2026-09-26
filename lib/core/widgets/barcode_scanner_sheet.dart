@@ -29,22 +29,14 @@ class BarcodeScannerSheet extends StatefulWidget {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       enableDrag: !isContinuous, // Nonaktifkan drag-dismiss pada continuous scan agar tidak sengaja tertutup
       builder: (ctx) => BarcodeScannerSheet(
         title: title,
         isContinuous: isContinuous,
-        onScanned: isContinuous
-            ? onScanned
-            : (code) async {
-                if (onScanned != null) {
-                  await onScanned(code);
-                }
-                if (ctx.mounted) {
-                  Navigator.of(ctx).pop(code);
-                }
-                return null;
-              },
+        onScanned: onScanned,
       ),
     );
   }
@@ -66,9 +58,11 @@ class BarcodeScannerSheet extends StatefulWidget {
   State<BarcodeScannerSheet> createState() => _BarcodeScannerSheetState();
 }
 
-class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
+class _BarcodeScannerSheetState extends State<BarcodeScannerSheet>
+    with WidgetsBindingObserver {
   late final MobileScannerController _controller;
   bool _isProcessing = false;
+  bool _hasDetected = false;
   bool _torchOn = false;
   bool _isSuccessFlash = false;
   String? _lastScannedCode;
@@ -82,16 +76,30 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
   @override
   void initState() {
     super.initState();
-    // Pada mode continuous, gunakan detectionSpeed normal agar barang yang sama bisa discan ulang setelah cooldown
+    WidgetsBinding.instance.addObserver(this);
+    // Menggunakan DetectionSpeed.normal dengan timeout 300ms untuk performa stabil di Android CameraX / Xiaomi
     _controller = MobileScannerController(
-      detectionSpeed: widget.isContinuous ? DetectionSpeed.normal : DetectionSpeed.noDuplicates,
+      detectionSpeed: DetectionSpeed.normal,
+      detectionTimeoutMs: 300,
       facing: CameraFacing.back,
       torchEnabled: false,
+      returnImage: false,
     );
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!mounted) return;
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _controller.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _controller.start();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _feedbackTimer?.cancel();
     _flashTimer?.cancel();
     _controller.dispose();
@@ -100,7 +108,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
 
   void _triggerSuccessFlash() {
     _flashTimer?.cancel();
-    setState(() => _isSuccessFlash = true);
+    if (mounted) setState(() => _isSuccessFlash = true);
     _flashTimer = Timer(const Duration(milliseconds: 600), () {
       if (mounted) {
         setState(() => _isSuccessFlash = false);
@@ -118,6 +126,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
   }
 
   void _onDetect(BarcodeCapture capture) async {
+    if (_hasDetected && !widget.isContinuous) return;
     if (!widget.isContinuous && _isProcessing) return;
 
     for (final barcode in capture.barcodes) {
@@ -168,14 +177,21 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
           return;
         } else {
           // Mode Single Scan (bawaan untuk input form / satu barang)
+          _hasDetected = true;
           setState(() => _isProcessing = true);
           HapticFeedback.mediumImpact();
 
-          if (widget.onScanned != null) {
-            await widget.onScanned!(cleanCode);
-          }
-          if (mounted) {
-            Navigator.of(context).pop(cleanCode);
+          try {
+            if (widget.onScanned != null) {
+              await widget.onScanned!(cleanCode);
+            }
+          } finally {
+            try {
+              await _controller.stop();
+            } catch (_) {}
+            if (mounted) {
+              Navigator.of(context).pop(cleanCode);
+            }
           }
           return;
         }
@@ -184,12 +200,27 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
   }
 
   void _toggleTorch() async {
-    await _controller.toggleTorch();
-    setState(() => _torchOn = !_torchOn);
+    try {
+      await _controller.toggleTorch();
+      if (mounted) {
+        setState(() => _torchOn = !_torchOn);
+      }
+    } catch (_) {}
   }
 
   void _switchCamera() async {
-    await _controller.switchCamera();
+    try {
+      await _controller.switchCamera();
+    } catch (_) {}
+  }
+
+  Future<void> _closeSheet() async {
+    try {
+      await _controller.stop();
+    } catch (_) {}
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -281,7 +312,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                   visualDensity: VisualDensity.compact,
                   tooltip: 'Tutup',
                   icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: _closeSheet,
                 ),
               ],
             ),
@@ -454,7 +485,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: _closeSheet,
                             icon: const Icon(Icons.check_circle_rounded, size: 20),
                             label: Text(
                               _scannedCount > 0
