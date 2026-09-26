@@ -87,8 +87,8 @@ class _KasirMainPageState extends State<KasirMainPage> {
 
       // ── TOMBOL SCAN BARCODE DI TENGAH (MENONJOL KE ATAS) ───────────
       floatingActionButton: Container(
-        width: 62,
-        height: 62,
+        width: 56,
+        height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
@@ -96,15 +96,10 @@ class _KasirMainPageState extends State<KasirMainPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white, width: 4),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFC62828).withValues(alpha: 0.45),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-              spreadRadius: 1,
-            ),
-          ],
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.4),
+            width: 3,
+          ),
         ),
         child: Material(
           color: Colors.transparent,
@@ -116,7 +111,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
               child: Icon(
                 Icons.qr_code_scanner_rounded,
                 color: Colors.white,
-                size: 30,
+                size: 27,
               ),
             ),
           ),
@@ -159,25 +154,10 @@ class _KasirMainPageState extends State<KasirMainPage> {
 
                 // ── Slot Tengah Khusus untuk Tombol Scan yang Menonjol ──
                 Expanded(
-                  child: InkWell(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: _openBarcodeScanner,
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [
-                        Text(
-                          'Scan',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFC62828),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                      ],
-                    ),
+                    child: const SizedBox.expand(),
                   ),
                 ),
 
