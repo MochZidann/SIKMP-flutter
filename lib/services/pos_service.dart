@@ -156,11 +156,18 @@ class PosService {
         body: json.encode(body),
       ).timeout(const Duration(seconds: 15));
 
-      final data = json.decode(response.body);
-      if (response.statusCode == 200 && data['success'] == true) {
+      Map<String, dynamic>? data;
+      try {
+        data = json.decode(response.body) as Map<String, dynamic>?;
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.statusCode == 200 && data != null && data['success'] == true) {
         return QrisResponse.fromJson(data);
       } else {
-        throw Exception(data['message'] ?? 'Gagal generate QRIS');
+        final errorMsg = data?['message'] ?? 'Gagal membuat QRIS (Status ${response.statusCode})';
+        throw Exception(errorMsg);
       }
     } catch (e) {
       debugPrint('Error generateQris: $e');

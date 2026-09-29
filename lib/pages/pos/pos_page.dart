@@ -159,12 +159,21 @@ class PosPageState extends State<PosPage> {
     };
   }
 
-  void _showErrorSnackbar(String message) {
+  void _showErrorSnackbar(String message, {VoidCallback? onRetry}) {
+    final cleanMsg = message.replaceFirst(RegExp(r'^Exception:\s*'), '');
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(cleanMsg),
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
+        action: onRetry != null
+            ? SnackBarAction(
+                label: 'Coba Lagi',
+                textColor: Colors.white,
+                onPressed: onRetry,
+              )
+            : null,
       ),
     );
   }
@@ -210,7 +219,10 @@ class PosPageState extends State<PosPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isGenerating = false);
-        _showErrorSnackbar('Gagal membuat QRIS: $e');
+        _showErrorSnackbar(
+          'Gagal membuat QRIS: $e',
+          onRetry: _handleGenerateQris,
+        );
       }
     }
   }
