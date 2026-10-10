@@ -63,6 +63,7 @@ class GudangService {
     Product product, {
     int? userId,
     String? imageBase64,
+    String? imageUrl,
   }) async {
     try {
       final currentUserId = userId ?? AuthService().currentUser?.id ?? 1;
@@ -79,6 +80,7 @@ class GudangService {
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
+        if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
         if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
       };
 
@@ -115,6 +117,7 @@ class GudangService {
     Product product, {
     int? userId,
     String? imageBase64,
+    String? imageUrl,
     bool removeImage = false,
   }) async {
     try {
@@ -132,6 +135,7 @@ class GudangService {
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
+        if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
         if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
         if (removeImage) 'remove_image': true,
       };

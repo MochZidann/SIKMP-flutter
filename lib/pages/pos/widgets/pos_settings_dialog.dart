@@ -32,12 +32,14 @@ class _PosSettingsDialogState extends State<PosSettingsDialog> {
     super.dispose();
   }
 
-  void _save() {
-    PosService.baseUrl = _urlCtrl.text.trim();
+  void _save() async {
+    final newUrl = _urlCtrl.text.trim();
+    await PosService.saveBaseUrl(newUrl);
+    if (!mounted) return;
     Navigator.pop(context);
     widget.onSaved();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Alamat API berhasil diperbarui!')),
+      const SnackBar(content: Text('Alamat API berhasil disimpan secara persisten!')),
     );
   }
 

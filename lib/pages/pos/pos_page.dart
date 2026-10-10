@@ -8,7 +8,6 @@ import 'widgets/pos_cart_bottom_sheet.dart';
 import 'widgets/pos_checkout_bar.dart';
 import 'widgets/pos_product_catalog.dart';
 import 'widgets/pos_receipt_dialog.dart';
-import 'widgets/pos_settings_dialog.dart';
 import 'widgets/qris_modal_bottom_sheet.dart';
 
 class PosPage extends StatefulWidget {
@@ -278,13 +277,6 @@ class PosPageState extends State<PosPage> {
     );
   }
 
-  // -------------------------------------------------------------
-  // PENGATURAN API BACKEND
-  // -------------------------------------------------------------
-  void _showSettingsDialog() {
-    PosSettingsDialog.show(context, onSaved: _loadProducts);
-  }
-
   @override
   Widget build(BuildContext context) {
     final total = _cartTotal;
@@ -327,16 +319,6 @@ class PosPageState extends State<PosPage> {
               child: const Icon(Icons.shopping_cart_outlined),
             ),
             onPressed: _cart.isEmpty ? null : _showCartDetailsBottomSheet,
-          ),
-          IconButton(
-            tooltip: 'Muat Ulang Produk',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadProducts,
-          ),
-          IconButton(
-            tooltip: 'Pengaturan Server API',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: _showSettingsDialog,
           ),
         ],
       ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
-import '../pos/widgets/pos_settings_dialog.dart';
 import 'tabs/gudang_category_tab.dart';
 import 'tabs/gudang_dashboard_tab.dart';
 import 'tabs/gudang_inbound_tab.dart';
@@ -72,13 +71,6 @@ class _GudangMainPageState extends State<GudangMainPage> {
         foregroundColor: Colors.white,
         title: const AppTopBarTitle(roleName: 'Admin Gudang'),
         actions: [
-          IconButton(
-            tooltip: 'Pengaturan API Server',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              PosSettingsDialog.show(context, onSaved: () => setState(() {}));
-            },
-          ),
           IconButton(
             tooltip: 'Keluar / Logout',
             icon: const Icon(Icons.logout_rounded),

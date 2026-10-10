@@ -54,6 +54,8 @@ class PosCartBottomSheet extends StatefulWidget {
 }
 
 class _PosCartBottomSheetState extends State<PosCartBottomSheet> {
+  String _selectedPaymentMethod = 'CASH';
+
   int get _cartTotal {
     int total = 0;
     widget.cart.forEach((productId, qty) {
@@ -286,49 +288,170 @@ class _PosCartBottomSheetState extends State<PosCartBottomSheet> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+
+          // ── FITUR RADIOBUTTON: PEMILIHAN METODE PEMBAYARAN ──
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 14, top: 10, right: 14, bottom: 2),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.tune_rounded, size: 16, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Metode Pembayaran (RadioButton)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                RadioGroup<String>(
+                  groupValue: _selectedPaymentMethod,
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedPaymentMethod = val);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                    child: Row(
+                      children: [
+                        // Kiri: Tunai (Cash)
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () => setState(() => _selectedPaymentMethod = 'CASH'),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _selectedPaymentMethod == 'CASH'
+                                    ? Colors.green.shade50
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _selectedPaymentMethod == 'CASH'
+                                      ? const Color(0xFF2E7D32)
+                                      : Colors.grey.shade300,
+                                  width: _selectedPaymentMethod == 'CASH' ? 1.5 : 1,
+                                ),
+                              ),
+                              child: RadioListTile<String>(
+                                value: 'CASH',
+                                activeColor: const Color(0xFF2E7D32),
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                                title: const Text(
+                                  'Tunai',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                secondary: const Icon(
+                                  Icons.payments_rounded,
+                                  color: Color(0xFF2E7D32),
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Kanan: QRIS
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () => setState(() => _selectedPaymentMethod = 'QRIS'),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _selectedPaymentMethod == 'QRIS'
+                                    ? Colors.red.shade50
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _selectedPaymentMethod == 'QRIS'
+                                      ? const Color(0xFFD32F2F)
+                                      : Colors.grey.shade300,
+                                  width: _selectedPaymentMethod == 'QRIS' ? 1.5 : 1,
+                                ),
+                              ),
+                              child: RadioListTile<String>(
+                                value: 'QRIS',
+                                activeColor: const Color(0xFFD32F2F),
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                                title: const Text(
+                                  'QRIS',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                secondary: const Icon(
+                                  Icons.qr_code_2_rounded,
+                                  color: Color(0xFFD32F2F),
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 14),
 
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: total < 1000
-                      ? null
-                      : () {
-                          Navigator.pop(context);
-                          widget.onCashPayment();
-                        },
-                  icon: const Icon(Icons.payments_rounded, size: 18),
-                  label: const Text('Bayar Cash', style: TextStyle(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
+          // Action Button Sesuai Pilihan RadioButton
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: total < 1000
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      if (_selectedPaymentMethod == 'CASH') {
+                        widget.onCashPayment();
+                      } else {
+                        widget.onQrisPayment();
+                      }
+                    },
+              icon: Icon(
+                _selectedPaymentMethod == 'CASH'
+                    ? Icons.payments_rounded
+                    : Icons.qr_code_2_rounded,
+                size: 20,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: total < 1000
-                      ? null
-                      : () {
-                          Navigator.pop(context);
-                          widget.onQrisPayment();
-                        },
-                  icon: const Icon(Icons.qr_code_2_rounded, size: 18),
-                  label: const Text('Bayar QR', style: TextStyle(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD32F2F),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
+              label: Text(
+                _selectedPaymentMethod == 'CASH'
+                    ? 'Lanjutkan Pembayaran Tunai'
+                    : 'Generate QRIS Pembayaran',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
-            ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _selectedPaymentMethod == 'CASH'
+                    ? const Color(0xFF2E7D32)
+                    : const Color(0xFFD32F2F),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ),
         ],
       ),

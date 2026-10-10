@@ -340,6 +340,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   _buildQuickActionBtn(
                     title: 'Buka POS',
                     subtitle: 'Transaksi Baru',
+                    assetPath: 'assets/images/pos.png',
                     icon: Icons.point_of_sale_rounded,
                     color: const Color(0xFFD32F2F),
                     onTap: () => widget.onNavigateTab(1),
@@ -356,6 +357,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   _buildQuickActionBtn(
                     title: 'Penjualan',
                     subtitle: 'Riwayat Struk',
+                    assetPath: 'assets/images/penjualan.png',
                     icon: Icons.receipt_long_rounded,
                     color: Colors.teal.shade700,
                     onTap: () => widget.onNavigateTab(3),
@@ -505,7 +507,8 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget _buildQuickActionBtn({
     required String title,
     required String subtitle,
-    required IconData icon,
+    IconData? icon,
+    String? assetPath,
     required Color color,
     required VoidCallback onTap,
   }) {
@@ -537,7 +540,17 @@ class _DashboardTabState extends State<DashboardTab> {
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: color, size: 22),
+                  child: assetPath != null
+                      ? Image.asset(
+                          assetPath,
+                          width: 22,
+                          height: 22,
+                          color: color,
+                          colorBlendMode: BlendMode.srcIn,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(icon ?? Icons.circle, color: color, size: 22),
+                        )
+                      : Icon(icon ?? Icons.circle, color: color, size: 22),
                 ),
                 const SizedBox(height: 8),
                 Text(

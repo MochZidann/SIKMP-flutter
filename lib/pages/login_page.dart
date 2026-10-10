@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_user.dart';
 import '../services/auth_service.dart';
-import '../services/pos_service.dart';
 import 'admin/admin_main_page.dart';
 import 'gudang/gudang_main_page.dart';
 import 'kasir_main_page.dart';
@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _rememberMe = false;
 
   // Role yang didukung sistem
   final List<Map<String, dynamic>> _roles = [
@@ -72,6 +73,23 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _selectedRole = 'KASIR'; // Default ke Kasir sesuai instruksi
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUser = prefs.getString('saved_username');
+      final remember = prefs.getBool('remember_me') ?? false;
+      if (savedUser != null && savedUser.isNotEmpty && remember) {
+        if (mounted) {
+          setState(() {
+            _rememberMe = true;
+            _usernameController.text = savedUser;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -106,6 +124,18 @@ class _LoginPageState extends State<LoginPage> {
         password: password,
         role: _selectedRole,
       );
+
+      // Simpan atau hapus username dari SharedPreferences sesuai opsi Ingat Saya
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (_rememberMe) {
+          await prefs.setString('saved_username', username);
+          await prefs.setBool('remember_me', true);
+        } else {
+          await prefs.remove('saved_username');
+          await prefs.setBool('remember_me', false);
+        }
+      } catch (_) {}
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -232,51 +262,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _showSettingsDialog() {
-    final urlCtrl = TextEditingController(text: PosService.baseUrl);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Pengaturan Alamat API'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Base URL API Backend:',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: urlCtrl,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                isDense: true,
-                hintText: 'http://10.0.2.2:8000/api/pos',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD32F2F)),
-            onPressed: () {
-              PosService.baseUrl = urlCtrl.text.trim();
-              Navigator.pop(ctx);
-              _showSnackbar('Alamat API berhasil disimpan.');
-            },
-            child: const Text('Simpan', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -301,16 +286,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: Column(
                 children: [
-                  // Action Bar (Settings API)
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: Colors.white70),
-                      onPressed: _showSettingsDialog,
-                      tooltip: 'Pengaturan IP Backend',
-                    ),
-                  ),
-
+                  const SizedBox(height: 12),
                   // Logo Resmi SIKMP KOP DES KEL
                   Image.asset(
                     'assets/images/sikmp_white.png',
@@ -571,7 +547,47 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10),
+
+                        // Fitur CheckBox & SharedPreferences: Ingat Saya
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                activeColor: const Color(0xFFD32F2F),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _rememberMe = val ?? false;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _rememberMe = !_rememberMe;
+                                });
+                              },
+                              child: Text(
+                                'Ingat Saya (Simpan Akun)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
 
                         // Tombol Masuk
                         SizedBox(

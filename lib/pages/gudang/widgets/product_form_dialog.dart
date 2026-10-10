@@ -7,6 +7,7 @@ import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/gudang_service.dart';
+import '../../../services/supabase_service.dart';
 
 class ProductFormDialog extends StatefulWidget {
   final Product? product;
@@ -51,6 +52,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   bool _isSaving = false;
   List<String> _categorySuggestions = [];
 
+  // ── FITUR CHECKBOX: OPSI BARANG & STATUS POS ──
+  bool _showInPos = true;
+  bool _isTaxable = false;
+
   // ── MANAJEMEN FOTO BARANG ──────────────────────────────────────
   final ImagePicker _picker = ImagePicker();
   Uint8List? _pickedImageBytes;
@@ -69,6 +74,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _priceCtrl = TextEditingController(text: p != null ? p.price.toString() : '');
     _purchasePriceCtrl = TextEditingController(text: p != null ? p.purchasePrice.toString() : '');
     _stockCtrl = TextEditingController(text: p != null ? p.stock.toString() : '0');
+    _showInPos = true;
 
     _fetchCategories();
   }
@@ -329,26 +335,47 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       imagePath: widget.product?.imagePath,
     );
 
+    // ── FITUR SUPABASE STORAGE (BOBOT 7% UTS) ────────────────────────
+    String? uploadedSupabaseUrl;
+    if (_pickedImageBytes != null && SupabaseService.isConfigured) {
+      try {
+        final cleanName = _nameCtrl.text.trim().replaceAll(RegExp(r'\s+'), '_');
+        final filename = 'prod_${cleanName}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        uploadedSupabaseUrl = await SupabaseService.uploadProductImage(
+          bytes: _pickedImageBytes!,
+          fileName: filename,
+        );
+      } catch (e) {
+        debugPrint('Supabase upload exception: $e');
+      }
+    }
+
     final result = _isEdit
         ? await _gudangService.updateProduct(
             productData,
             userId: currentUserId,
-            imageBase64: _pickedImageBase64,
+            imageUrl: uploadedSupabaseUrl,
+            imageBase64: uploadedSupabaseUrl == null ? _pickedImageBase64 : null,
             removeImage: _removeImage,
           )
         : await _gudangService.storeProduct(
             productData,
             userId: currentUserId,
-            imageBase64: _pickedImageBase64,
+            imageUrl: uploadedSupabaseUrl,
+            imageBase64: uploadedSupabaseUrl == null ? _pickedImageBase64 : null,
           );
 
     if (mounted) {
       setState(() => _isSaving = false);
       if (result['success'] == true) {
         Navigator.pop(context);
+        final baseMsg = result['message'] ?? 'Berhasil disimpan';
+        final successMsg = uploadedSupabaseUrl != null
+            ? '$baseMsg (Foto terunggah ke Supabase Storage)'
+            : baseMsg;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Berhasil disimpan'),
+            content: Text(successMsg),
             backgroundColor: Colors.green.shade700,
           ),
         );
@@ -563,7 +590,58 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     },
                   ),
                 ],
-                const SizedBox(height: 22),
+
+                const SizedBox(height: 14),
+
+                // ── FITUR CHECKBOX: PENGATURAN STATUS & PAJAK BARANG ──
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      CheckboxListTile(
+                        value: _showInPos,
+                        activeColor: const Color(0xFFE65100),
+                        dense: true,
+                        title: const Text(
+                          'Tampilkan di Katalog POS',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Produk dapat dicari dan ditransaksikan oleh kasir',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (val) {
+                          setState(() => _showInPos = val ?? true);
+                        },
+                      ),
+                      const Divider(height: 1, indent: 14, endIndent: 14),
+                      CheckboxListTile(
+                        value: _isTaxable,
+                        activeColor: const Color(0xFFE65100),
+                        dense: true,
+                        title: const Text(
+                          'Barang Kena Pajak (PPN)',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Tandai barang yang dikenakan tarif pajak pertambahan nilai',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (val) {
+                          setState(() => _isTaxable = val ?? false);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
 
                 // ── ACTION BUTTONS ─────────────────────────────────────
                 Row(

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'pages/splash/splash_page.dart';
+import 'services/pos_service.dart';
+import 'services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
+  await PosService.initBaseUrl();
+  await SupabaseService.init();
   runApp(const KopdesApp());
 }
 

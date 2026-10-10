@@ -102,6 +102,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                 // 1. Dashboard
                 _buildNavItem(
                   index: 0,
+                  assetPath: 'assets/images/dashboard.png',
                   icon: Icons.dashboard_outlined,
                   selectedIcon: Icons.dashboard_rounded,
                   label: 'Dashboard',
@@ -109,6 +110,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                 // 2. POS
                 _buildNavItem(
                   index: 1,
+                  assetPath: 'assets/images/pos.png',
                   icon: Icons.point_of_sale_outlined,
                   selectedIcon: Icons.point_of_sale_rounded,
                   label: 'POS',
@@ -171,6 +173,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                 // 5. Penjualan
                 _buildNavItem(
                   index: 3,
+                  assetPath: 'assets/images/penjualan.png',
                   icon: Icons.receipt_long_outlined,
                   selectedIcon: Icons.receipt_long_rounded,
                   label: 'Penjualan',
@@ -185,8 +188,9 @@ class _KasirMainPageState extends State<KasirMainPage> {
 
   Widget _buildNavItem({
     required int index,
-    required IconData icon,
-    required IconData selectedIcon,
+    String? assetPath,
+    IconData? icon,
+    IconData? selectedIcon,
     required String label,
   }) {
     final isSelected = _currentIndex == index;
@@ -201,11 +205,25 @@ class _KasirMainPageState extends State<KasirMainPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? selectedIcon : icon,
-              color: isSelected ? primaryColor : unselectedColor,
-              size: 24,
-            ),
+            if (assetPath != null)
+              Image.asset(
+                assetPath,
+                width: 23,
+                height: 23,
+                color: isSelected ? primaryColor : unselectedColor,
+                colorBlendMode: BlendMode.srcIn,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  isSelected ? (selectedIcon ?? icon ?? Icons.circle) : (icon ?? Icons.circle),
+                  color: isSelected ? primaryColor : unselectedColor,
+                  size: 24,
+                ),
+              )
+            else if (icon != null)
+              Icon(
+                isSelected ? (selectedIcon ?? icon) : icon,
+                color: isSelected ? primaryColor : unselectedColor,
+                size: 24,
+              ),
             const SizedBox(height: 4),
             Text(
               label,

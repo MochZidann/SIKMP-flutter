@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
-import '../pos/widgets/pos_settings_dialog.dart';
 import 'tabs/owner_dashboard_tab.dart';
 import 'tabs/owner_inventory_tab.dart';
 import 'tabs/owner_sales_tab.dart';
@@ -72,13 +71,6 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
         foregroundColor: Colors.white,
         title: const AppTopBarTitle(roleName: 'Owner / Pengawas'),
         actions: [
-          IconButton(
-            tooltip: 'Pengaturan API Server',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              PosSettingsDialog.show(context, onSaved: () => setState(() {}));
-            },
-          ),
           IconButton(
             tooltip: 'Keluar / Logout',
             icon: const Icon(Icons.logout_rounded),

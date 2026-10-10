@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../models/sale_record.dart';
@@ -24,6 +25,13 @@ class _PenjualanTabState extends State<PenjualanTab> {
   List<SaleRecord> _sales = [];
   bool _filterTodayOnly = true;
 
+  // ── FITUR DATEPICKER & TIMEPICKER ──
+  DateTime? _selectedFilterDate;
+  TimeOfDay? _selectedFilterTime;
+
+  // ── FITUR CONTEXTMENU (POSISI TAP) ──
+  Offset? _lastTapDownPosition;
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +41,13 @@ class _PenjualanTabState extends State<PenjualanTab> {
   Future<void> _loadSales() async {
     setState(() => _isLoading = true);
     final user = AuthService().currentUser;
-    final dateParam = _filterTodayOnly
-        ? DateFormat('yyyy-MM-dd').format(DateTime.now())
-        : null;
+    String? dateParam;
+
+    if (_selectedFilterDate != null) {
+      dateParam = DateFormat('yyyy-MM-dd').format(_selectedFilterDate!);
+    } else if (_filterTodayOnly) {
+      dateParam = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    }
 
     final result = await _posService.getSales(
       cashierId: user?.id,
@@ -43,10 +55,178 @@ class _PenjualanTabState extends State<PenjualanTab> {
     );
 
     if (mounted) {
+      List<SaleRecord> list = result['sales'] as List<SaleRecord>? ?? [];
+
+      // Filter jam transaksi jika _selectedFilterTime diatur
+      if (_selectedFilterTime != null) {
+        list = list.where((s) {
+          final dt = DateTime.fromMillisecondsSinceEpoch(s.createdAtEpochMs);
+          return dt.hour == _selectedFilterTime!.hour;
+        }).toList();
+      }
+
       setState(() {
-        _sales = result['sales'] as List<SaleRecord>? ?? [];
+        _sales = list;
         _isLoading = false;
       });
+    }
+  }
+
+  /// ── FITUR DATEPICKER & TIMEPICKER DALAM 1 ALUR ──────────────────
+  Future<void> _pickDateTimeFilterCombined() async {
+    // 1. Munculkan showDatePicker() terlebih dahulu
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedFilterDate ?? DateTime.now(),
+      firstDate: DateTime(2022),
+      lastDate: DateTime(2035),
+      helpText: 'LANGKAH 1/2: PILIH TANGGAL TRANSAKSI',
+      cancelText: 'Batal',
+      confirmText: 'Lanjut ke Jam',
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    // 2. Langsung lanjutkan memunculkan showTimePicker() untuk jam
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: _selectedFilterTime ?? TimeOfDay.now(),
+      helpText: 'LANGKAH 2/2: PILIH JAM TRANSAKSI',
+      cancelText: 'Lewati Jam',
+      confirmText: 'Terapkan Filter',
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _selectedFilterDate = pickedDate;
+      _selectedFilterTime = pickedTime;
+      _filterTodayOnly = false;
+    });
+    _loadSales();
+  }
+
+  /// ── FITUR DATEPICKER DIALOG ──────────────────────────────────────
+  Future<void> _pickDateFilter() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedFilterDate ?? DateTime.now(),
+      firstDate: DateTime(2022),
+      lastDate: DateTime(2035),
+      helpText: 'Pilih Tanggal Transaksi',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedFilterDate = picked;
+        _filterTodayOnly = false;
+      });
+      _loadSales();
+    }
+  }
+
+  /// ── FITUR TIMEPICKER DIALOG ──────────────────────────────────────
+  Future<void> _pickTimeFilter() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedFilterTime ?? TimeOfDay.now(),
+      helpText: 'Pilih Jam Transaksi',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedFilterTime = picked;
+      });
+      _loadSales();
+    }
+  }
+
+  void _resetDateTimeFilter() {
+    setState(() {
+      _selectedFilterDate = null;
+      _selectedFilterTime = null;
+      _filterTodayOnly = true;
+    });
+    _loadSales();
+  }
+
+  /// ── FITUR CONTEXTMENU (showMenu pada onLongPress) ─────────────────
+  Future<void> _showTransactionContextMenu(
+    Offset tapPosition,
+    SaleRecord sale,
+  ) async {
+    HapticFeedback.mediumImpact();
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx + 1,
+        tapPosition.dy + 1,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 6,
+      items: const [
+        PopupMenuItem(
+          value: 'detail',
+          child: Row(
+            children: [
+              Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFFD32F2F)),
+              SizedBox(width: 10),
+              Text('Lihat Rincian', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'copy',
+          child: Row(
+            children: [
+              Icon(Icons.copy_rounded, size: 18, color: Colors.blueGrey),
+              SizedBox(width: 10),
+              Text('Salin No. Struk', style: TextStyle(fontSize: 13)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'print',
+          child: Row(
+            children: [
+              Icon(Icons.print_rounded, size: 18, color: Colors.green),
+              SizedBox(width: 10),
+              Text('Cetak Struk Transaksi', style: TextStyle(fontSize: 13)),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (!mounted || selected == null) return;
+    if (selected == 'detail') {
+      _showSaleDetailModal(sale);
+    } else if (selected == 'copy') {
+      await Clipboard.setData(ClipboardData(text: sale.transactionId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nomor struk ${sale.transactionId} disalin ke clipboard!'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } else if (selected == 'print') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Menghubungkan ke Printer Thermal Bluetooth...'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -277,120 +457,356 @@ class _PenjualanTabState extends State<PenjualanTab> {
         foregroundColor: Colors.white,
         title: const AppTopBarTitle(roleName: 'Kasir'),
         actions: [
-          IconButton(
-            tooltip: 'Segarkan Data',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadSales,
+          // ── MENU FILTER TANGGAL & WAKTU DI NAVBAR KANAN ATAS ──
+          PopupMenuButton<String>(
+            tooltip: 'Filter Tanggal & Jam Penjualan',
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.filter_alt_outlined, color: Colors.white),
+                if (_selectedFilterDate != null || _selectedFilterTime != null)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: Colors.amberAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFD32F2F), width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onSelected: (val) {
+              if (val == 'combined') {
+                _pickDateTimeFilterCombined();
+              } else if (val == 'date') {
+                _pickDateFilter();
+              } else if (val == 'time') {
+                _pickTimeFilter();
+              } else if (val == 'today') {
+                setState(() {
+                  _filterTodayOnly = true;
+                  _selectedFilterDate = null;
+                  _selectedFilterTime = null;
+                });
+                _loadSales();
+              } else if (val == 'all') {
+                setState(() {
+                  _filterTodayOnly = false;
+                  _selectedFilterDate = null;
+                  _selectedFilterTime = null;
+                });
+                _loadSales();
+              } else if (val == 'reset') {
+                _resetDateTimeFilter();
+              }
+            },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'combined',
+                child: Row(
+                  children: [
+                    Icon(Icons.event_available_rounded, color: Color(0xFFD32F2F), size: 22),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Pilih Tanggal & Jam (1 Alur)',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          Text(
+                            'DatePicker -> TimePicker berurutan',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'date',
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month_rounded, color: Color(0xFF1976D2), size: 20),
+                    SizedBox(width: 12),
+                    Text('Pilih Tanggal Saja (DatePicker)', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'time',
+                child: Row(
+                  children: [
+                    Icon(Icons.schedule_rounded, color: Color(0xFF388E3C), size: 20),
+                    SizedBox(width: 12),
+                    Text('Pilih Jam Saja (TimePicker)', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'today',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.today_rounded,
+                      color: (_filterTodayOnly && _selectedFilterDate == null)
+                          ? const Color(0xFFD32F2F)
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Hari Ini Saja',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: (_filterTodayOnly && _selectedFilterDate == null)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'all',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.all_inclusive_rounded,
+                      color: (!_filterTodayOnly && _selectedFilterDate == null)
+                          ? const Color(0xFFD32F2F)
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Semua Transaksi',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: (!_filterTodayOnly && _selectedFilterDate == null)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_selectedFilterDate != null || _selectedFilterTime != null) ...[
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'reset',
+                  child: Row(
+                    children: [
+                      Icon(Icons.filter_alt_off_rounded, color: Colors.red, size: 20),
+                      SizedBox(width: 12),
+                      Text('Reset Filter', style: TextStyle(fontSize: 13, color: Colors.red, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
       body: Column(
         children: [
-          // ── FILTER BAR HARI INI / SEMUA ──────────────────────────────────
-          Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: Colors.white,
-          child: Row(
-            children: [
-              FilterChip(
-                showCheckmark: false,
-                label: const Text('Hari Ini'),
-                selected: _filterTodayOnly,
-                selectedColor: const Color(0xFFD32F2F),
-                labelStyle: TextStyle(
-                  color: _filterTodayOnly ? Colors.white : const Color(0xFF333333),
-                  fontWeight:
-                      _filterTodayOnly ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 12,
+          // ── BANNER INDIKATOR FILTER AKTIF DARI NAVBAR ──
+          if (_selectedFilterDate != null || _selectedFilterTime != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                border: Border(
+                  bottom: BorderSide(color: Colors.amber.shade200),
                 ),
-                onSelected: (val) {
-                  setState(() => _filterTodayOnly = true);
-                  _loadSales();
-                },
               ),
-              const SizedBox(width: 8),
-              FilterChip(
-                showCheckmark: false,
-                label: const Text('Semua Transaksi'),
-                selected: !_filterTodayOnly,
-                selectedColor: const Color(0xFFD32F2F),
-                labelStyle: TextStyle(
-                  color: !_filterTodayOnly ? Colors.white : const Color(0xFF333333),
-                  fontWeight:
-                      !_filterTodayOnly ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 12,
-                ),
-                onSelected: (val) {
-                  setState(() => _filterTodayOnly = false);
-                  _loadSales();
-                },
-              ),
-              const Spacer(),
-              Text(
-                '${_sales.length} Transaksi',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
-
-        const Divider(height: 1),
-
-        // ── LIST TRANSAKSI ───────────────────────────────────────────────
-        Expanded(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
-                )
-              : _sales.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_alt_rounded, size: 16, color: Color(0xFFE65100)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Filter Aktif: '
+                      '${_selectedFilterDate != null ? DateFormat('dd/MM/yyyy').format(_selectedFilterDate!) : ''}'
+                      '${_selectedFilterDate != null && _selectedFilterTime != null ? ' • ' : ''}'
+                      '${_selectedFilterTime != null ? 'Jam ${_selectedFilterTime!.format(context)}' : ''}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _resetDateTimeFilter,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
                         children: [
-                          Icon(Icons.receipt_long_outlined,
-                              size: 48, color: Colors.grey.shade400),
-                          const SizedBox(height: 12),
-                          Text(
-                            _filterTodayOnly
-                                ? 'Belum ada transaksi penjualan hari ini.'
-                                : 'Belum ada data penjualan.',
-                            style: const TextStyle(color: Colors.grey),
-                          ),
+                          Icon(Icons.close_rounded, size: 13, color: Colors.red),
+                          SizedBox(width: 3),
+                          Text('Reset', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    )
-                  : RefreshIndicator(
-                      color: const Color(0xFFD32F2F),
-                      onRefresh: _loadSales,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _sales.length,
-                        itemBuilder: (context, index) {
-                          final sale = _sales[index];
-                          final dateStr =
-                              DateFormat('dd/MM HH:mm').format(
-                            DateTime.fromMillisecondsSinceEpoch(
-                                sale.createdAtEpochMs),
-                          );
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.grey.shade200),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+          // ── BAR QUICK FILTER & TOTAL TRANSAKSI ──
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.white,
+            child: Row(
+              children: [
+                FilterChip(
+                  showCheckmark: false,
+                  label: const Text('Hari Ini'),
+                  selected: _filterTodayOnly && _selectedFilterDate == null,
+                  selectedColor: const Color(0xFFD32F2F),
+                  labelStyle: TextStyle(
+                    color: (_filterTodayOnly && _selectedFilterDate == null)
+                        ? Colors.white
+                        : const Color(0xFF333333),
+                    fontWeight: (_filterTodayOnly && _selectedFilterDate == null)
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                  onSelected: (val) {
+                    setState(() {
+                      _filterTodayOnly = true;
+                      _selectedFilterDate = null;
+                      _selectedFilterTime = null;
+                    });
+                    _loadSales();
+                  },
+                ),
+                const SizedBox(width: 8),
+                FilterChip(
+                  showCheckmark: false,
+                  label: const Text('Semua'),
+                  selected: !_filterTodayOnly && _selectedFilterDate == null,
+                  selectedColor: const Color(0xFFD32F2F),
+                  labelStyle: TextStyle(
+                    color: (!_filterTodayOnly && _selectedFilterDate == null)
+                        ? Colors.white
+                        : const Color(0xFF333333),
+                    fontWeight: (!_filterTodayOnly && _selectedFilterDate == null)
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                  onSelected: (val) {
+                    setState(() {
+                      _filterTodayOnly = false;
+                      _selectedFilterDate = null;
+                      _selectedFilterTime = null;
+                    });
+                    _loadSales();
+                  },
+                ),
+                const Spacer(),
+                Text(
+                  '${_sales.length} Transaksi',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // ── LIST TRANSAKSI ───────────────────────────────────────────────
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+                  )
+                : _sales.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.receipt_long_outlined,
+                                size: 48, color: Colors.grey.shade400),
+                            const SizedBox(height: 12),
+                            Text(
+                              _selectedFilterDate != null || _selectedFilterTime != null
+                                  ? 'Tidak ada transaksi pada filter tanggal/jam ini.'
+                                  : (_filterTodayOnly
+                                      ? 'Belum ada transaksi penjualan hari ini.'
+                                      : 'Belum ada data penjualan.'),
+                              style: const TextStyle(color: Colors.grey),
                             ),
-                            child: ListTile(
-                              onTap: () => _showSaleDetailModal(sale),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 4),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        color: const Color(0xFFD32F2F),
+                        onRefresh: _loadSales,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _sales.length,
+                          itemBuilder: (context, index) {
+                            final sale = _sales[index];
+                            final dateStr =
+                                DateFormat('dd/MM HH:mm').format(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                  sale.createdAtEpochMs),
+                            );
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.shade200),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.02),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.translucent,
+                                onTapDown: (details) {
+                                  _lastTapDownPosition = details.globalPosition;
+                                },
+                                child: ListTile(
+                                  onTap: () => _showSaleDetailModal(sale),
+                                  // ── FITUR CONTEXTMENU PADA ONLONGPRESS ──
+                                  onLongPress: () {
+                                    _showTransactionContextMenu(
+                                      _lastTapDownPosition ??
+                                          const Offset(100, 250),
+                                      sale,
+                                    );
+                                  },
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 4),
                               leading: CircleAvatar(
                                 radius: 20,
                                 backgroundColor: sale.paymentMethod == 'QRIS'
@@ -456,8 +872,9 @@ class _PenjualanTabState extends State<PenjualanTab> {
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        );
+                      },
                       ),
                     ),
         ),
