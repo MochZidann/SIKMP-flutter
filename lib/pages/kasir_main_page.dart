@@ -60,8 +60,6 @@ class _KasirMainPageState extends State<KasirMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    const double barHeight = 66.0;
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: IndexedStack(
@@ -84,49 +82,13 @@ class _KasirMainPageState extends State<KasirMainPage> {
           const PenjualanTab(),
         ],
       ),
-
-      // ── TOMBOL SCAN BARCODE DI TENGAH (MENONJOL KE ATAS) ───────────
-      floatingActionButton: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFFEF5350), Color(0xFFC62828)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.85),
-            width: 4.5,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: _openBarcodeScanner,
-            splashColor: Colors.white.withValues(alpha: 0.3),
-            child: const Center(
-              child: Icon(
-                Icons.qr_code_scanner_rounded,
-                color: Colors.white,
-                size: 27,
-              ),
-            ),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
-      // ── BOTTOM NAVIGATION BAR DENGAN 4 TAB & GAP DI TENGAH ──────────
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 10,
               offset: const Offset(0, -3),
             ),
           ],
@@ -134,7 +96,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
         child: SafeArea(
           top: false,
           child: SizedBox(
-            height: barHeight,
+            height: 68,
             child: Row(
               children: [
                 // 1. Dashboard
@@ -152,23 +114,61 @@ class _KasirMainPageState extends State<KasirMainPage> {
                   label: 'POS',
                 ),
 
-                // ── Slot Tengah Khusus untuk Tombol Scan yang Menonjol ──
+                // 3. Tombol Scan QR (Di tengah, rata bawah, tanpa teks, style gradasi bulat seperti semula)
                 Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _openBarcodeScanner,
-                    child: const SizedBox.expand(),
+                  child: Center(
+                    child: Tooltip(
+                      message: 'Scan Barcode Kamera',
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEF5350), Color(0xFFC62828)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFC62828).withValues(alpha: 0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            width: 3.0,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: _openBarcodeScanner,
+                            splashColor: Colors.white.withValues(alpha: 0.3),
+                            child: const Center(
+                              child: Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
 
-                // 3. Produk
+                // 4. Produk
                 _buildNavItem(
                   index: 2,
                   icon: Icons.inventory_2_outlined,
                   selectedIcon: Icons.inventory_2_rounded,
                   label: 'Produk',
                 ),
-                // 4. Penjualan
+                // 5. Penjualan
                 _buildNavItem(
                   index: 3,
                   icon: Icons.receipt_long_outlined,
@@ -206,7 +206,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
               color: isSelected ? primaryColor : unselectedColor,
               size: 24,
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               label,
               maxLines: 1,

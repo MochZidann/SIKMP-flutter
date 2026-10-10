@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_kop/core/widgets/metric_card.dart';
+import 'package:flutter_kop/pages/kasir_main_page.dart';
 import 'package:flutter_kop/pages/tabs/dashboard_tab.dart';
 
 void main() {
@@ -55,6 +56,29 @@ void main() {
       expect(find.text('Buka POS'), findsOneWidget);
       expect(find.text('Cek Produk'), findsOneWidget);
       expect(find.text('Penjualan'), findsOneWidget);
+    });
+
+    testWidgets('KasirMainPage renders unified bottom navigation with lowered Scan QR without text', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: KasirMainPage(),
+        ),
+      );
+
+      // Verifikasi label tab utama ada
+      expect(find.text('Dashboard'), findsWidgets);
+      expect(find.text('POS'), findsOneWidget);
+      expect(find.text('Produk'), findsOneWidget);
+      expect(find.text('Penjualan'), findsWidgets);
+
+      // Verifikasi tombol Scan QR tidak menggunakan teks label
+      expect(find.text('Scan QR'), findsNothing);
+
+      // Verifikasi icon scan QR ada di dalam navigation bar
+      expect(find.byIcon(Icons.qr_code_scanner_rounded), findsWidgets);
+
+      // Pastikan tidak ada FloatingActionButton menonjol di Scaffold
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
   });
 }
