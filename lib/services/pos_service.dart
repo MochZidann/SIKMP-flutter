@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../core/config/api_config.dart';
 import '../models/product.dart';
 import '../models/qris_response.dart';
 import '../models/sale_record.dart';
@@ -13,29 +13,18 @@ class PosService {
   factory PosService() => _instance;
   PosService._internal();
 
-  /// IP Server Backend Laravel Anda (dapat diubah langsung di baris ini)
-  static const String serverIp = '192.168.1.5';
-  static const String serverPort = '8000';
-  static const String defaultBaseUrl = 'http://$serverIp:$serverPort/api/pos';
+  /// Endpoint POS merujuk langsung ke konfigurasi pusat ApiConfig
+  static String get baseUrl => ApiConfig.posUrl;
 
-  static String baseUrl = defaultBaseUrl;
+  /// Delegasi inisialisasi ke konfigurasi pusat ApiConfig
+  static Future<void> initBaseUrl() async => ApiConfig.init();
 
-  /// Muat Base URL saat inisialisasi aplikasi (menggunakan konfigurasi kode)
-  static Future<void> initBaseUrl() async {
-    baseUrl = defaultBaseUrl;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('custom_base_url', defaultBaseUrl);
-    } catch (_) {}
-  }
-
-  /// Simpan Base URL ke SharedPreferences (tetap mendukung persistence)
+  /// Delegasi penyimpanan IP server ke ApiConfig
   static Future<void> saveBaseUrl(String newUrl) async {
-    baseUrl = newUrl;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('custom_base_url', newUrl);
-    } catch (_) {}
+    final uri = Uri.tryParse(newUrl);
+    if (uri != null && uri.host.isNotEmpty) {
+      await ApiConfig.setServerIp(uri.host);
+    }
   }
 
   /// Ambil daftar produk aktif dari database

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/config/api_config.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../models/audit_log.dart';
 import '../../../services/admin_service.dart';
-import '../../../services/pos_service.dart';
 import '../widgets/add_user_dialog.dart';
 import '../widgets/database_health_sheet.dart';
 import '../widgets/store_settings_dialog.dart';
@@ -199,7 +199,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'Server: ${PosService.baseUrl.replaceAll('/api/pos', '')}',
+                                    'Server: ${ApiConfig.hostUrl}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,

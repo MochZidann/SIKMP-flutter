@@ -1,22 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../models/owner_models.dart';
-import 'pos_service.dart';
 
 class OwnerService {
   static final OwnerService _instance = OwnerService._internal();
   factory OwnerService() => _instance;
   OwnerService._internal();
 
-  /// Mengambil URL basis untuk modul Owner, mengikuti PosService.baseUrl
-  String get ownerBaseUrl {
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/owner';
-    }
-    return '$base/owner';
-  }
+  /// Mengambil URL basis untuk modul Owner dari konfigurasi pusat ApiConfig
+  String get ownerBaseUrl => ApiConfig.ownerUrl;
 
   /// 1. Mengambil data ringkasan eksekutif Dashboard
   Future<OwnerDashboardData?> getDashboard() async {

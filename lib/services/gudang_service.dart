@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../models/product.dart';
 import '../models/stock_movement.dart';
 import 'auth_service.dart';
@@ -13,21 +14,9 @@ class GudangService {
 
   final PosService _posService = PosService();
 
-  String get syncBaseUrl {
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/sync';
-    }
-    return '$base/sync';
-  }
+  String get syncBaseUrl => ApiConfig.syncUrl;
 
-  String get gudangBaseUrl {
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/gudang';
-    }
-    return '$base/gudang';
-  }
+  String get gudangBaseUrl => ApiConfig.gudangUrl;
 
   // ── PRODUK (PRODUCT CRUD) ─────────────────────────────────────
 

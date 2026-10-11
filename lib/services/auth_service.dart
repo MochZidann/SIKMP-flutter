@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../models/auth_user.dart';
-import 'pos_service.dart';
+import 'fcm_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -13,15 +14,7 @@ class AuthService {
 
   bool get isLoggedIn => currentUser != null;
 
-  String get authBaseUrl {
-    // Derive auth base URL from PosService.baseUrl
-    // e.g. http://10.0.2.2:8000/api/pos -> http://10.0.2.2:8000/api/auth
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/auth';
-    }
-    return '$base/auth';
-  }
+  String get authBaseUrl => ApiConfig.authUrl;
 
   Future<AuthUser> login({
     required String username,
@@ -52,6 +45,9 @@ class AuthService {
       if (response.statusCode == 200 && data['success'] == true) {
         final userData = data['data']['user'];
         currentUser = AuthUser.fromJson(userData);
+        try {
+          await FcmService().subscribeToRole(currentUser!.role);
+        } catch (_) {}
         return currentUser!;
       } else {
         throw Exception(data['message'] ?? 'Login gagal.');
@@ -63,6 +59,9 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    try {
+      await FcmService().unsubscribeAllRoleTopics();
+    } catch (_) {}
     if (currentUser != null) {
       try {
         final uri = Uri.parse('$authBaseUrl/logout');

@@ -1,33 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../core/config/api_config.dart';
 import '../core/utils/password_helper.dart';
 import '../models/audit_log.dart';
 import '../models/auth_user.dart';
 import '../models/member.dart';
 import '../models/store_setting.dart';
-import 'pos_service.dart';
 
 class AdminService {
   static final AdminService _instance = AdminService._internal();
   factory AdminService() => _instance;
   AdminService._internal();
 
-  String get syncBaseUrl {
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/sync';
-    }
-    return '$base/sync';
-  }
+  String get syncBaseUrl => ApiConfig.syncUrl;
 
-  String get adminBaseUrl {
-    final base = PosService.baseUrl;
-    if (base.endsWith('/pos')) {
-      return '${base.substring(0, base.length - 4)}/admin';
-    }
-    return '$base/admin';
-  }
+  String get adminBaseUrl => ApiConfig.adminUrl;
 
   // ── PENGGUNA (USERS) ──────────────────────────────────────────
 
