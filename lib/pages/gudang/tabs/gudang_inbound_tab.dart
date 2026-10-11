@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
@@ -88,7 +89,11 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
           // ── DAFTAR MUTASI ──────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)))
+                ? ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: 6,
+                    itemBuilder: (_, _) => const SkeletonTransactionTile(),
+                  )
                 : _filteredMovements.isEmpty
                     ? EmptyDataView(
                         icon: Icons.swap_vert_rounded,

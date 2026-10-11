@@ -34,6 +34,8 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Keluar dari Akun?'),
         content: const Text('Apakah Anda yakin ingin logout dari akun Owner / Pengawas?'),
         actions: [
@@ -43,16 +45,14 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00796B)),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              await AuthService().logout();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              }
+              AuthService().logout();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
             },
             child: const Text('Ya, Logout', style: TextStyle(color: Colors.white)),
           ),

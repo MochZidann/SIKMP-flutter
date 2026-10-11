@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -45,9 +46,10 @@ class AuthService {
       if (response.statusCode == 200 && data['success'] == true) {
         final userData = data['data']['user'];
         currentUser = AuthUser.fromJson(userData);
-        try {
-          await FcmService().subscribeToRole(currentUser!.role);
-        } catch (_) {}
+
+        // Jalankan langganan topik FCM di latar belakang agar transisi login instan
+        unawaited(FcmService().subscribeToRole(currentUser!.role));
+
         return currentUser!;
       } else {
         throw Exception(data['message'] ?? 'Login gagal.');
@@ -59,10 +61,21 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    final userToLogout = currentUser;
+    currentUser = null;
+
+    // Bersihkan sesi dan langganan notifikasi di latar belakang agar UI logout instan
+    unawaited(_performBackgroundLogout(userToLogout));
+  }
+
+  Future<void> _performBackgroundLogout(AuthUser? user) async {
     try {
       await FcmService().unsubscribeAllRoleTopics();
-    } catch (_) {}
-    if (currentUser != null) {
+    } catch (e) {
+      debugPrint('FCM unsubscribe error: $e');
+    }
+
+    if (user != null) {
       try {
         final uri = Uri.parse('$authBaseUrl/logout');
         await http.post(
@@ -71,12 +84,11 @@ class AuthService {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          body: json.encode({'userId': currentUser!.id}),
-        ).timeout(const Duration(seconds: 5));
+          body: json.encode({'userId': user.id}),
+        ).timeout(const Duration(seconds: 3));
       } catch (e) {
-        debugPrint('Logout error: $e');
+        debugPrint('Logout backend error: $e');
       }
     }
-    currentUser = null;
   }
 }

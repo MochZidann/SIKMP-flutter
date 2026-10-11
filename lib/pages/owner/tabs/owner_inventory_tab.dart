@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../models/owner_models.dart';
 import '../../../services/owner_service.dart';
 
@@ -56,19 +57,7 @@ class _OwnerInventoryTabState extends State<OwnerInventoryTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Color(0xFF00796B)),
-            SizedBox(height: 16),
-            Text(
-              'Menganalisis kesehatan inventori & aset...',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-          ],
-        ),
-      );
+      return const SkeletonDashboard(hasBanner: false);
     }
 
     if (_errorMessage != null || _inventoryData == null) {

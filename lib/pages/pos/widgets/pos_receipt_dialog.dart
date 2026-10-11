@@ -36,6 +36,8 @@ class PosReceiptDialog extends StatelessWidget {
     final change = data['change'] ?? 0;
 
     return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       contentPadding: const EdgeInsets.all(24),
       content: Column(
@@ -207,17 +209,23 @@ class PosReceiptDialog extends StatelessWidget {
   Widget _buildReceiptRow(String label, String value, {bool isBold = false, Color? color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: const TextStyle(fontSize: 12, color: Colors.black54),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: color ?? const Color(0xFF2B2B2B),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              color: color ?? const Color(0xFF2B2B2B),
+            ),
           ),
         ),
       ],

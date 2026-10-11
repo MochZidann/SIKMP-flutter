@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/audit_log.dart';
 import '../../../services/admin_service.dart';
@@ -115,7 +116,12 @@ class _AdminAuditTabState extends State<AdminAuditTab> {
           // ── DAFTAR AUDIT LOG ───────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF8E24AA)))
+                ? ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: 6,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (_, _) => const SkeletonAuditLogTile(),
+                  )
                 : _filteredLogs.isEmpty
                     ? EmptyDataView(
                         icon: Icons.history_edu_rounded,

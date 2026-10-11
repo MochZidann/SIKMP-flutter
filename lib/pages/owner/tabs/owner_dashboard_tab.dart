@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../models/owner_models.dart';
 import '../../../services/owner_service.dart';
@@ -60,19 +61,7 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Color(0xFF00796B)),
-            SizedBox(height: 16),
-            Text(
-              'Menghubungkan ke data eksekutif...',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-          ],
-        ),
-      );
+      return const SkeletonDashboard(hasBanner: true);
     }
 
     if (_errorMessage != null || _dashboardData == null) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/product.dart';
@@ -103,6 +104,8 @@ class _GudangStockTabState extends State<GudangStockTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Hapus Barang Ini?'),
         content: Text(
           'Apakah Anda yakin ingin menghapus "${product.name}"? Data barang yang sudah memiliki riwayat transaksi penjualan akan diproteksi demi keamanan pembukuan.',
@@ -268,7 +271,11 @@ class _GudangStockTabState extends State<GudangStockTab> {
           // ── DAFTAR PRODUK & STOK ───────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)))
+                ? ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                    itemCount: 6,
+                    itemBuilder: (_, _) => const SkeletonProductTile(),
+                  )
                 : _filteredProducts.isEmpty
                     ? EmptyDataView(
                         icon: Icons.inventory_2_outlined,

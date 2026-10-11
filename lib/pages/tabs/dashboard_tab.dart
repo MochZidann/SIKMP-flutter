@@ -14,10 +14,10 @@ class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key, required this.onNavigateTab});
 
   @override
-  State<DashboardTab> createState() => _DashboardTabState();
+  DashboardTabState createState() => DashboardTabState();
 }
 
-class _DashboardTabState extends State<DashboardTab> {
+class DashboardTabState extends State<DashboardTab> {
   final PosService _posService = PosService();
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -28,6 +28,11 @@ class _DashboardTabState extends State<DashboardTab> {
   bool _isLoading = true;
   Map<String, dynamic> _stats = {};
   List<SaleRecord> _recentSales = [];
+
+  /// Memuat ulang statistik dashboard kasir dari server
+  Future<void> reload() async {
+    await _loadDashboardData();
+  }
 
   @override
   void initState() {
@@ -72,6 +77,8 @@ class _DashboardTabState extends State<DashboardTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Keluar dari Akun?'),
         content: const Text('Apakah Anda yakin ingin logout dari akun kasir?'),
         actions: [
@@ -81,16 +88,14 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD32F2F)),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              await AuthService().logout();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              }
+              AuthService().logout();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
             },
             child: const Text('Ya, Logout', style: TextStyle(color: Colors.white)),
           ),

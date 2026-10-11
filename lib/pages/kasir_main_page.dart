@@ -17,7 +17,10 @@ class KasirMainPage extends StatefulWidget {
 
 class _KasirMainPageState extends State<KasirMainPage> {
   late int _currentIndex;
+  final GlobalKey<DashboardTabState> _dashboardKey = GlobalKey<DashboardTabState>();
   final GlobalKey<PosPageState> _posKey = GlobalKey<PosPageState>();
+  final GlobalKey<ProdukTabState> _produkKey = GlobalKey<ProdukTabState>();
+  final GlobalKey<PenjualanTabState> _penjualanKey = GlobalKey<PenjualanTabState>();
 
   @override
   void initState() {
@@ -25,11 +28,34 @@ class _KasirMainPageState extends State<KasirMainPage> {
     _currentIndex = widget.initialIndex;
   }
 
+  /// Sinkronkan seluruh tab kasir saat barang berhasil terjual di POS
+  void _onSaleCompleted() {
+    _dashboardKey.currentState?.reload();
+    _produkKey.currentState?.reload();
+    _penjualanKey.currentState?.reload();
+  }
+
   void _onTabTapped(int index) {
     if (_currentIndex == index) return;
     setState(() {
       _currentIndex = index;
     });
+
+    // Otomatis sinkronkan data saat kasir berpindah tab agar selalu mutakhir
+    switch (index) {
+      case 0:
+        _dashboardKey.currentState?.reload();
+        break;
+      case 1:
+        _posKey.currentState?.reloadProducts();
+        break;
+      case 2:
+        _produkKey.currentState?.reload();
+        break;
+      case 3:
+        _penjualanKey.currentState?.reload();
+        break;
+    }
   }
 
   /// Aksi Scan Barcode Kamera Kasir (Mode Beruntun / Banyak Barang)
@@ -65,9 +91,14 @@ class _KasirMainPageState extends State<KasirMainPage> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          DashboardTab(onNavigateTab: _onTabTapped),
-          PosPage(key: _posKey, isEmbedded: true),
+          DashboardTab(key: _dashboardKey, onNavigateTab: _onTabTapped),
+          PosPage(
+            key: _posKey,
+            isEmbedded: true,
+            onSaleCompleted: _onSaleCompleted,
+          ),
           ProdukTab(
+            key: _produkKey,
             onAddToCart: (product) {
               _posKey.currentState?.addToCart(product);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +110,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
               );
             },
           ),
-          const PenjualanTab(),
+          PenjualanTab(key: _penjualanKey),
         ],
       ),
       bottomNavigationBar: Container(

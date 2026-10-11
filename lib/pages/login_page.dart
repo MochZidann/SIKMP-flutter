@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_user.dart';
@@ -125,17 +126,19 @@ class _LoginPageState extends State<LoginPage> {
         role: _selectedRole,
       );
 
-      // Simpan atau hapus username dari SharedPreferences sesuai opsi Ingat Saya
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        if (_rememberMe) {
-          await prefs.setString('saved_username', username);
-          await prefs.setBool('remember_me', true);
-        } else {
-          await prefs.remove('saved_username');
-          await prefs.setBool('remember_me', false);
-        }
-      } catch (_) {}
+      // Simpan atau hapus username dari SharedPreferences secara non-blocking
+      unawaited(() async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (_rememberMe) {
+            await prefs.setString('saved_username', username);
+            await prefs.setBool('remember_me', true);
+          } else {
+            await prefs.remove('saved_username');
+            await prefs.setBool('remember_me', false);
+          }
+        } catch (_) {}
+      }());
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -183,6 +186,8 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [

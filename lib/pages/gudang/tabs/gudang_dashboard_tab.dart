@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/header_curve_clipper.dart';
@@ -59,10 +60,15 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
     if (matched != null) {
       showModalBottomSheet(
         context: context,
+        backgroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (ctx) => Padding(
+        builder: (ctx) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -164,7 +170,7 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)));
+      return const SkeletonDashboard(hasBanner: true);
     }
 
     final totalProducts = _stats['totalProducts'] ?? 0;

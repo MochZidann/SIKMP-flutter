@@ -11,10 +11,10 @@ class PenjualanTab extends StatefulWidget {
   const PenjualanTab({super.key});
 
   @override
-  State<PenjualanTab> createState() => _PenjualanTabState();
+  PenjualanTabState createState() => PenjualanTabState();
 }
 
-class _PenjualanTabState extends State<PenjualanTab> {
+class PenjualanTabState extends State<PenjualanTab> {
   final PosService _posService = PosService();
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -25,6 +25,11 @@ class _PenjualanTabState extends State<PenjualanTab> {
   bool _isLoading = true;
   List<SaleRecord> _sales = [];
   bool _filterTodayOnly = true;
+
+  /// Memuat ulang riwayat penjualan kasir dari server
+  Future<void> reload() async {
+    await _loadSales();
+  }
 
   // ── FITUR DATEPICKER & TIMEPICKER ──
   DateTime? _selectedFilterDate;
@@ -265,11 +270,16 @@ class _PenjualanTabState extends State<PenjualanTab> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
         return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,

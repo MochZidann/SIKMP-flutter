@@ -45,6 +45,8 @@ class _DatabaseHealthSheetState extends State<DatabaseHealthSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Bersihkan Cache Server?'),
         content: const Text(
           'Tindakan ini akan mengosongkan cache aplikasi di server untuk menyegarkan data dan performa.',

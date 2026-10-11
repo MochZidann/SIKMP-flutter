@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -147,57 +148,51 @@ class FcmService {
     );
   }
 
-  /// Langganan topik berdasarkan Role saat user Login:
-  /// - 'gudang' -> Peringatan Stok Kritis & PO Masuk
-  /// - 'owner'  -> Ringkasan Omzet Harian & Fraud Alert
-  /// - 'kasir'  -> Pembayaran QRIS Sukses
-  /// - 'admin'  -> Peringatan Sistem & Keamanan
   Future<void> subscribeToRole(String role) async {
     if (!_isInitialized) return;
     try {
       final messaging = FirebaseMessaging.instance;
-      await messaging.subscribeToTopic('all_users');
+      final futures = <Future>[
+        messaging.subscribeToTopic('all_users'),
+      ];
 
       final normalizedRole = role.toLowerCase().trim();
-      switch (normalizedRole) {
-        case 'gudang':
-        case 'admin gudang':
-          await messaging.subscribeToTopic('notif_gudang');
-          debugPrint('🔔 Berlangganan topik: notif_gudang (Stok Kritis & PO)');
-          break;
-        case 'owner':
-          await messaging.subscribeToTopic('notif_owner');
-          debugPrint('🔔 Berlangganan topik: notif_owner (Omzet Tutup Toko & Fraud)');
-          break;
-        case 'kasir':
-          await messaging.subscribeToTopic('notif_kasir');
-          debugPrint('🔔 Berlangganan topik: notif_kasir (QRIS Masuk)');
-          break;
-        case 'admin':
-        case 'admin sistem':
-          await messaging.subscribeToTopic('notif_admin');
-          debugPrint('🔔 Berlangganan topik: notif_admin (Sistem)');
-          break;
+      if (normalizedRole.contains('gudang')) {
+        futures.add(messaging.subscribeToTopic('notif_gudang'));
+        debugPrint('🔔 Berlangganan topik: notif_gudang (Stok Kritis & PO)');
+      } else if (normalizedRole.contains('owner') || normalizedRole.contains('pengawas')) {
+        futures.add(messaging.subscribeToTopic('notif_owner'));
+        debugPrint('🔔 Berlangganan topik: notif_owner (Omzet Tutup Toko & Fraud)');
+      } else if (normalizedRole.contains('kasir')) {
+        futures.add(messaging.subscribeToTopic('notif_kasir'));
+        debugPrint('🔔 Berlangganan topik: notif_kasir (QRIS Masuk)');
+      } else if (normalizedRole.contains('admin')) {
+        futures.add(messaging.subscribeToTopic('notif_admin'));
+        debugPrint('🔔 Berlangganan topik: notif_admin (Sistem)');
       }
 
-      // Kirim token FCM ke backend untuk dicatat bersama User ID
+      await Future.wait(futures);
+
+      // Kirim token FCM ke backend untuk dicatat bersama User ID di latar belakang
       if (_fcmToken != null) {
-        await _sendTokenToBackend(_fcmToken!);
+        unawaited(_sendTokenToBackend(_fcmToken!));
       }
     } catch (e) {
       debugPrint('⚠️ Gagal berlangganan topik role: $e');
     }
   }
 
-  /// Batalkan langganan topik saat Logout agar notifikasi role sebelumnya tidak masuk
+  /// Batalkan langganan topik saat Logout secara paralel agar cepat
   Future<void> unsubscribeAllRoleTopics() async {
     if (!_isInitialized) return;
     try {
       final messaging = FirebaseMessaging.instance;
-      await messaging.unsubscribeFromTopic('notif_gudang');
-      await messaging.unsubscribeFromTopic('notif_owner');
-      await messaging.unsubscribeFromTopic('notif_kasir');
-      await messaging.unsubscribeFromTopic('notif_admin');
+      await Future.wait([
+        messaging.unsubscribeFromTopic('notif_gudang'),
+        messaging.unsubscribeFromTopic('notif_owner'),
+        messaging.unsubscribeFromTopic('notif_kasir'),
+        messaging.unsubscribeFromTopic('notif_admin'),
+      ]);
       debugPrint('🔕 Berhasil berhenti berlangganan semua topik role');
     } catch (e) {
       debugPrint('⚠️ Gagal membatalkan langganan topik: $e');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../models/owner_models.dart';
 import '../../../services/owner_service.dart';
 
@@ -81,9 +82,7 @@ class _OwnerSalesTabState extends State<OwnerSalesTab> {
         // 2. Konten Utama
         Expanded(
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF00796B)),
-                )
+              ? const SkeletonDashboard(hasBanner: true)
               : _errorMessage != null || _salesData == null
                   ? _buildErrorView()
                   : _buildSalesContent(_salesData!),

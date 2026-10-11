@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/member.dart';
 import '../../../services/admin_service.dart';
@@ -96,7 +97,12 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
           // ── DAFTAR ANGGOTA ─────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF00897B)))
+                ? ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: 6,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (_, _) => const SkeletonTransactionTile(),
+                  )
                 : _filteredMembers.isEmpty
                     ? EmptyDataView(
                         icon: Icons.card_membership_rounded,

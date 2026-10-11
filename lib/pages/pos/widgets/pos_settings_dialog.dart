@@ -46,6 +46,8 @@ class _PosSettingsDialogState extends State<PosSettingsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
       title: const Text('Pengaturan API Backend'),
       content: Column(
         mainAxisSize: MainAxisSize.min,

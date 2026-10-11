@@ -142,6 +142,8 @@ class _QrisModalBottomSheetState extends State<QrisModalBottomSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Batalkan QRIS?'),
         content: const Text(
           'Apakah Anda yakin ingin membatalkan transaksi pembayaran ini? Kode QR tidak akan dapat digunakan lagi.',

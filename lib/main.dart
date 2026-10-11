@@ -26,8 +26,18 @@ class KopdesApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFFD32F2F),
           primary: const Color(0xFFD32F2F),
+          surface: Colors.white,
         ),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       home: const SplashPage(),
     );

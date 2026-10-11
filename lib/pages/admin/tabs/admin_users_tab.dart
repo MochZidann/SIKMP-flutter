@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/auth_user.dart';
 import '../../../services/admin_service.dart';
@@ -70,6 +71,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: Text('$actionText Akun?'),
         content: Text(
           targetActive
@@ -120,6 +123,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Reset Password Pengguna'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -192,6 +197,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Hapus Pengguna?'),
         content: Text('Apakah Anda yakin ingin menghapus akun @${user.username}? Tindakan ini tidak dapat dibatalkan.'),
         actions: [
@@ -306,7 +313,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           // ── USER LIST VIEW ─────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF1976D2)))
+                ? ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                    itemCount: 6,
+                    itemBuilder: (_, _) => const SkeletonUserTile(),
+                  )
                 : _filteredUsers.isEmpty
                     ? EmptyDataView(
                         icon: Icons.people_outline_rounded,

@@ -12,8 +12,13 @@ import 'widgets/qris_modal_bottom_sheet.dart';
 
 class PosPage extends StatefulWidget {
   final bool isEmbedded;
+  final VoidCallback? onSaleCompleted;
 
-  const PosPage({super.key, this.isEmbedded = false});
+  const PosPage({
+    super.key,
+    this.isEmbedded = false,
+    this.onSaleCompleted,
+  });
 
   @override
   PosPageState createState() => PosPageState();
@@ -27,6 +32,11 @@ class PosPageState extends State<PosPage> {
   final Map<int, int> _cart = {}; // productId -> quantity
 
   bool _isGenerating = false;
+
+  /// Memuat ulang daftar produk dari server untuk sinkronisasi eksternal
+  Future<void> reloadProducts() async {
+    await _loadProducts();
+  }
 
   @override
   void initState() {
@@ -240,16 +250,42 @@ class PosPageState extends State<PosPage> {
   // -------------------------------------------------------------
   // MODAL SUKSES & STRUK PEMBAYARAN
   // -------------------------------------------------------------
-  void _showSuccessReceiptDialog(Map<String, dynamic> data) {
+  void _showSuccessReceiptDialog(Map<String, dynamic> data) async {
+    // Salin data barang yang terjual dari keranjang
+    final Map<int, int> soldItems = Map<int, int>.from(_cart);
+
     setState(() {
+      // 1. Kurangi stok lokal secara instan (optimistic UI update 0 ms)
+      if (soldItems.isNotEmpty) {
+        _products = _products.map((p) {
+          if (soldItems.containsKey(p.id)) {
+            final qtySold = soldItems[p.id]!;
+            final updatedStock = (p.stock - qtySold).clamp(0, 999999);
+            return p.copyWith(stock: updatedStock);
+          }
+          return p;
+        }).toList();
+      }
       _cart.clear();
     });
 
-    PosReceiptDialog.show(
+    // 2. Sinkronkan data aktual dari server database Laravel
+    _loadProducts();
+
+    // 3. Trigger callback ke parent agar tab lainnya (Produk, Dashboard, Penjualan) ikut ter-update
+    widget.onSaleCompleted?.call();
+
+    // 4. Tampilkan modal dialog struk pembayaran
+    await PosReceiptDialog.show(
       context,
       data: data,
       getProductName: _getProductName,
     );
+
+    // 5. Saat struk ditutup kasir, pastikan status katalog produk sinkron 100%
+    if (mounted) {
+      _loadProducts();
+    }
   }
 
   // -------------------------------------------------------------

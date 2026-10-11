@@ -12,10 +12,10 @@ class ProdukTab extends StatefulWidget {
   const ProdukTab({super.key, this.onAddToCart});
 
   @override
-  State<ProdukTab> createState() => _ProdukTabState();
+  ProdukTabState createState() => ProdukTabState();
 }
 
-class _ProdukTabState extends State<ProdukTab> {
+class ProdukTabState extends State<ProdukTab> {
   final PosService _posService = PosService();
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -28,6 +28,11 @@ class _ProdukTabState extends State<ProdukTab> {
   List<Product> _filteredProducts = [];
   bool _isLoading = true;
   String _selectedCategory = 'Semua';
+
+  /// Memuat ulang daftar produk dari server
+  Future<void> reload() async {
+    await _loadProducts();
+  }
 
   @override
   void initState() {

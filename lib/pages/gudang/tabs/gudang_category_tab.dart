@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/category_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../services/gudang_service.dart';
 
@@ -58,7 +59,12 @@ class _GudangCategoryTabState extends State<GudangCategoryTab> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFE65100)))
+          ? ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: 6,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (_, _) => const SkeletonCategoryCard(),
+            )
           : _categorySummaries.isEmpty
               ? EmptyDataView(
                   icon: Icons.category_rounded,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../core/widgets/metric_card.dart';
@@ -44,7 +45,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF1976D2)));
+      return const SkeletonDashboard(hasBanner: true);
     }
 
     final totalUsers = _stats['totalUsers'] ?? 0;
