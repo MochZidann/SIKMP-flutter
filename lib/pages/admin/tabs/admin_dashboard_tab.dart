@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/empty_data_view.dart';
+import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../models/audit_log.dart';
 import '../../../services/admin_service.dart';
@@ -59,108 +60,242 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       onRefresh: _loadDashboardData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── BANNER HEADER ADMIN SISTEM ─────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1976D2), Color(0xFF0D47A1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1976D2).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
+            // ── BANNER HEADER ADMIN SISTEM DENGAN BACKGROUND MELENGKUNG ──
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Background Biru Melengkung di Tengah ke Bawah
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 35,
+                  child: ClipPath(
+                    clipper: const HeaderCurveClipper(),
+                    child: Container(
+                      color: const Color(0xFF1976D2),
+                    ),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24),
+                ),
+
+                // Card 2 Layer (Layer 1: Putih, Layer 2: Biru Solid)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                      margin: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1976D2),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1976D2).withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
-                          const SizedBox(width: 10),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'ADMIN SISTEM',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 15,
-                                  letterSpacing: 1,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 22),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'ADMIN SISTEM',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14.5,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Pengendali Master Data & Keamanan',
+                                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 4,
+                                      backgroundColor: serverStatus == 'ONLINE'
+                                          ? const Color(0xFF69F0AE)
+                                          : const Color(0xFFFF5252),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      serverStatus,
+                                      style: TextStyle(
+                                        color: serverStatus == 'ONLINE'
+                                            ? const Color(0xFF69F0AE)
+                                            : const Color(0xFFFF5252),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(
-                                'Pengendali Master Data & Keamanan',
-                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.dns_rounded, size: 13, color: Colors.white70),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Server: ${PosService.baseUrl.replaceAll('/api/pos', '')}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── LAYER PERTAMA WARNA PUTIH (DI BAWAH LAYER BIRU): AKSI CEPAT ──
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 2, 14, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 3.5,
+                                height: 13,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1976D2),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Aksi Admin Cepat',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2B2B2B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              _buildQuickActionBtn(
+                                title: 'Tambah User',
+                                icon: Icons.person_add_alt_1_rounded,
+                                color: const Color(0xFF1976D2),
+                                onTap: () {
+                                  AddUserDialog.show(context, onUserAdded: _loadDashboardData);
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              _buildQuickActionBtn(
+                                title: 'Profil Toko',
+                                icon: Icons.storefront_rounded,
+                                color: const Color(0xFF00796B),
+                                onTap: () {
+                                  StoreSettingsDialog.show(context, onSaved: _loadDashboardData);
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              _buildQuickActionBtn(
+                                title: 'Database',
+                                icon: Icons.storage_rounded,
+                                color: const Color(0xFFE65100),
+                                onTap: () {
+                                  DatabaseHealthSheet.show(context);
+                                },
+                              ),
+                              const SizedBox(width: 6),
+                              _buildQuickActionBtn(
+                                title: 'Sinkronisasi',
+                                icon: Icons.sync_rounded,
+                                color: const Color(0xFF5C6BC0),
+                                onTap: _loadDashboardData,
                               ),
                             ],
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: serverStatus == 'ONLINE'
-                              ? Colors.green.withValues(alpha: 0.25)
-                              : Colors.red.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: serverStatus == 'ONLINE' ? Colors.greenAccent : Colors.redAccent,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircleAvatar(
-                              radius: 4,
-                              backgroundColor: serverStatus == 'ONLINE' ? Colors.greenAccent : Colors.redAccent,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              serverStatus,
-                              style: TextStyle(
-                                color: serverStatus == 'ONLINE' ? Colors.greenAccent : Colors.redAccent,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Server: ${PosService.baseUrl.replaceAll('/api/pos', '')}',
-                    style: const TextStyle(color: Colors.white60, fontSize: 11, fontFamily: 'monospace'),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
             // ── GRID METRIK UTAMA ───────────────────────────────────────
             const Text(
@@ -207,63 +342,6 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   color: const Color(0xFFE65100),
                   subtitle: 'Tabel & Server Cache',
                   onTap: () => DatabaseHealthSheet.show(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // ── QUICK ACTIONS ───────────────────────────────────────────
-            const Text(
-              'Pusat Kendali Admin',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.person_add_alt_1_rounded,
-                    label: 'Tambah User',
-                    color: const Color(0xFF1976D2),
-                    onTap: () {
-                      AddUserDialog.show(context, onUserAdded: _loadDashboardData);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.storefront_rounded,
-                    label: 'Profil & Struk',
-                    color: const Color(0xFF00796B),
-                    onTap: () {
-                      StoreSettingsDialog.show(context, onSaved: _loadDashboardData);
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.storage_rounded,
-                    label: 'Database & Cache',
-                    color: const Color(0xFFE65100),
-                    onTap: () {
-                      DatabaseHealthSheet.show(context);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.sync_rounded,
-                    label: 'Sinkronisasi',
-                    color: const Color(0xFF455A64),
-                    onTap: _loadDashboardData,
-                  ),
                 ),
               ],
             ),
@@ -342,64 +420,65 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   );
                 },
               ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
+    ),
+  ),
     );
   }
-}
 
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.grey.shade800,
+  Widget _buildQuickActionBtn({
+    required String title,
+    IconData? icon,
+    String? assetPath,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: assetPath != null
+                      ? Image.asset(
+                          assetPath,
+                          width: 24,
+                          height: 24,
+                          color: color,
+                          colorBlendMode: BlendMode.srcIn,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(icon ?? Icons.circle, color: color, size: 24),
+                        )
+                      : Icon(icon ?? Icons.circle, color: color, size: 24),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B2B2B),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

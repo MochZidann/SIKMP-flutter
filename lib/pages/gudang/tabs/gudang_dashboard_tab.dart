@@ -3,6 +3,7 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
+import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
 import '../widgets/product_form_dialog.dart';
@@ -179,98 +180,222 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
       onRefresh: _loadDashboardData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── BANNER HEADER GUDANG ────────────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE65100), Color(0xFFBF360C)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFE65100).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
+            // ── BANNER HEADER GUDANG DENGAN BACKGROUND MELENGKUNG ──
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Background Oranye Melengkung di Tengah ke Bawah
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 35,
+                  child: ClipPath(
+                    clipper: const HeaderCurveClipper(),
+                    child: Container(
+                      color: const Color(0xFFE65100),
+                    ),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.warehouse_rounded, color: Colors.white, size: 24),
-                          ),
-                          const SizedBox(width: 10),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ADMIN GUDANG',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 15,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                              Text(
-                                'Manajemen Logistik & Stok Toko',
-                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+
+                // Card 2 Layer (Layer 1: Putih, Layer 2: Oranye Solid)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── LAYER KEDUA (BERWARNA ORANYE SOLID) ───────────
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE65100),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFE65100).withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.warehouse_rounded, color: Colors.white, size: 22),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      const Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'ADMIN GUDANG',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 14.5,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          Text(
+                                            'Manajemen Logistik & Stok Toko',
+                                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '$todayMovements Mutasi Hari Ini',
+                                      style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Estimasi Nilai Aset Inventaris',
+                                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      formatRupiah(totalValuation),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Text(
-                          '$todayMovements Mutasi Hari Ini',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+
+                        // ── LAYER PERTAMA WARNA PUTIH (DI BAWAH LAYER ORANYE): AKSI CEPAT ──
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 2, 14, 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 3.5,
+                                    height: 13,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE65100),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Aksi Gudang Cepat',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2B2B2B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  _buildQuickActionBtn(
+                                    title: 'Tambah Stok',
+                                    icon: Icons.add_box_rounded,
+                                    color: const Color(0xFFE65100),
+                                    onTap: () {
+                                      ProductFormDialog.show(context, onProductSaved: _loadDashboardData);
+                                    },
+                                  ),
+                                  const SizedBox(width: 6),
+                                  _buildQuickActionBtn(
+                                    title: 'Scan Barcode',
+                                    icon: Icons.qr_code_scanner_rounded,
+                                    color: const Color(0xFFD84315),
+                                    onTap: _quickScanBarcode,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  _buildQuickActionBtn(
+                                    title: 'Katalog',
+                                    icon: Icons.inventory_2_outlined,
+                                    color: const Color(0xFF00897B),
+                                    onTap: () => widget.onNavigateTab?.call(1),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  _buildQuickActionBtn(
+                                    title: 'Mutasi',
+                                    icon: Icons.swap_vert_rounded,
+                                    color: const Color(0xFF5D4037),
+                                    onTap: () => widget.onNavigateTab?.call(2),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Estimasi Nilai Aset Inventaris',
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    formatRupiah(totalValuation),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
             // ── METRIK STATUS INVENTARIS (KOMPAK SEPERTI KASIR) ─────────
             const Text(
@@ -342,58 +467,6 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
             ),
             const SizedBox(height: 24),
 
-            // ── QUICK ACTION BUTTONS ───────────────────────────────────
-            const Text(
-              'Aksi Cepat Gudang',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2B2B2B)),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.add_box_rounded,
-                    label: 'Tambah Barang',
-                    color: const Color(0xFFE65100),
-                    onTap: () {
-                      ProductFormDialog.show(context, onProductSaved: _loadDashboardData);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.qr_code_scanner_rounded,
-                    label: 'Scan Barcode',
-                    color: const Color(0xFFD84315),
-                    onTap: _quickScanBarcode,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.inventory_2_outlined,
-                    label: 'Katalog Stok',
-                    color: const Color(0xFF00897B),
-                    onTap: () => widget.onNavigateTab?.call(1),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.swap_vert_rounded,
-                    label: 'Riwayat Mutasi',
-                    color: const Color(0xFF5D4037),
-                    onTap: () => widget.onNavigateTab?.call(2),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
 
             // ── RECENT MUTATIONS LIST ───────────────────────────────────
             Row(
@@ -499,10 +572,13 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                   );
                 },
               ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 
   Widget _buildMetricTile({
@@ -593,59 +669,57 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
       ),
     );
   }
-}
 
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.grey.shade800,
+  Widget _buildQuickActionBtn({
+    required String title,
+    String? assetPath,
+    IconData? icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: assetPath != null
+                      ? Image.asset(
+                          assetPath,
+                          width: 24,
+                          height: 24,
+                          color: color,
+                          colorBlendMode: BlendMode.srcIn,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(icon ?? Icons.circle, color: color, size: 24),
+                        )
+                      : Icon(icon ?? Icons.circle, color: color, size: 24),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B2B2B),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../models/product.dart';
 import 'pos_product_card.dart';
@@ -91,8 +92,17 @@ class _PosProductCatalogState extends State<PosProductCatalog> {
   @override
   Widget build(BuildContext context) {
     if (widget.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+      return GridView.builder(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 0.79,
+        ),
+        itemCount: 6,
+        itemBuilder: (context, index) => const SkeletonPosCard(),
       );
     }
 

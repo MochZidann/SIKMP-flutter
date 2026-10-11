@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/widgets/app_skeleton.dart';
 import '../../core/widgets/app_top_bar_title.dart';
+import '../../core/widgets/header_curve_clipper.dart';
 import '../../models/sale_record.dart';
 import '../../services/auth_service.dart';
 import '../../services/pos_service.dart';
@@ -163,105 +165,242 @@ class _DashboardTabState extends State<DashboardTab> {
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── 1. BANNER IDENTITAS KASIR ────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFD32F2F), Color(0xFF9A0007)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD32F2F).withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 22),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (user?.name ?? 'Petugas Kasir').toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14.5,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            Text(
-                              'ID: KASIR-0${user?.id ?? '1'} • Kasir Toko',
-                              style: const TextStyle(color: Colors.white70, fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
+              // ── 1. HEADER MERAH DENGAN BACKGROUND MELENGKUNG & CARD 2 LAYER ──
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Background Merah Melengkung di Tengah ke Bawah
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 35,
+                    child: ClipPath(
+                      clipper: const HeaderCurveClipper(),
+                      child: Container(
+                        color: const Color(0xFFD32F2F),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 12, color: Colors.white70),
-                              const SizedBox(width: 6),
-                              Text(
-                                todayStr,
-                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
-                              ),
-                            ],
+                    ),
+                  ),
+
+                  // Card 2 Layer (Layer 1: Putih, Layer 2: Merah Solid + Aksi Cepat)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
                           ),
-                          Text(
-                            '$todayTransactions Struk Berhasil',
-                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── LAYER KEDUA (BERWARNA MERAH SOLID) ───────────
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD32F2F),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFD32F2F).withValues(alpha: 0.25),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(alpha: 0.2),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.person_rounded, color: Colors.white, size: 22),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  (user?.name ?? 'Petugas Kasir').toUpperCase(),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 14.5,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                const Text(
+                                                  'Kasir Toko • Unit Koperasi',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Tanggal Hari Ini
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.calendar_today_rounded, size: 10.5, color: Colors.white70),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            todayStr,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.payment_rounded, size: 13, color: Colors.white70),
+                                      SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          'Layanan Transaksi Tunai & QRIS',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // ── LAYER PERTAMA WARNA PUTIH (DI BAWAH LAYER MERAH): AKSI CEPAT ──
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 2, 14, 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 3.5,
+                                      height: 13,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD32F2F),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      'Aksi Kasir Cepat',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2B2B2B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    _buildQuickActionBtn(
+                                      title: 'Buka POS',
+                                      assetPath: 'assets/images/pos.png',
+                                      icon: Icons.point_of_sale_rounded,
+                                      color: const Color(0xFFD32F2F),
+                                      onTap: () => widget.onNavigateTab(1),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildQuickActionBtn(
+                                      title: 'Cek Produk',
+                                      icon: Icons.inventory_2_rounded,
+                                      color: Colors.blue.shade700,
+                                      onTap: () => widget.onNavigateTab(2),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildQuickActionBtn(
+                                      title: 'Penjualan',
+                                      assetPath: 'assets/images/penjualan.png',
+                                      icon: Icons.receipt_long_rounded,
+                                      color: Colors.teal.shade700,
+                                      onTap: () => widget.onNavigateTab(3),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 16),
-
-              // ── 2. METRIK PENJUALAN HARI INI (COMPACT) ────────────────────
-              const Text(
-                'Ringkasan Penjualan Hari Ini',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2B2B2B),
-                ),
-              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 2. METRIK PENJUALAN HARI INI (COMPACT) ───────────────
+                    const Text(
+                      'Ringkasan Penjualan Hari Ini',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2B2B2B),
+                      ),
+                    ),
               const SizedBox(height: 10),
 
               IntrinsicHeight(
@@ -271,7 +410,8 @@ class _DashboardTabState extends State<DashboardTab> {
                     Expanded(
                       child: _buildMetricTile(
                         title: 'Total Omzet',
-                        value: _isLoading ? 'Memuat...' : _currencyFormat.format(todayRevenue),
+                        value: _currencyFormat.format(todayRevenue),
+                        isLoading: _isLoading,
                         icon: Icons.payments_rounded,
                         color: const Color(0xFFD32F2F),
                         subtitle: 'Hari Ini',
@@ -282,7 +422,8 @@ class _DashboardTabState extends State<DashboardTab> {
                     Expanded(
                       child: _buildMetricTile(
                         title: 'Total Transaksi',
-                        value: _isLoading ? '...' : '$todayTransactions Struk',
+                        value: '$todayTransactions Struk',
+                        isLoading: _isLoading,
                         icon: Icons.receipt_long_rounded,
                         color: const Color(0xFF1976D2),
                         subtitle: 'Selesai',
@@ -300,7 +441,8 @@ class _DashboardTabState extends State<DashboardTab> {
                     Expanded(
                       child: _buildMetricTile(
                         title: 'Omzet QRIS',
-                        value: _isLoading ? '...' : _currencyFormat.format(qrisRevenue),
+                        value: _currencyFormat.format(qrisRevenue),
+                        isLoading: _isLoading,
                         icon: Icons.qr_code_2_rounded,
                         color: const Color(0xFF7B1FA2),
                         subtitle: '$qrisCount TRX',
@@ -311,7 +453,8 @@ class _DashboardTabState extends State<DashboardTab> {
                     Expanded(
                       child: _buildMetricTile(
                         title: 'Omzet Tunai',
-                        value: _isLoading ? '...' : _currencyFormat.format(tunaiRevenue),
+                        value: _currencyFormat.format(tunaiRevenue),
+                        isLoading: _isLoading,
                         icon: Icons.local_atm_rounded,
                         color: const Color(0xFF2E7D32),
                         subtitle: '$tunaiCount TRX',
@@ -322,50 +465,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              // ── 3. PINTASAN CEPAT (SHORTCUTS) ─────────────────────────────
-              const Text(
-                'Aksi Kasir Cepat',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2B2B2B),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  _buildQuickActionBtn(
-                    title: 'Buka POS',
-                    subtitle: 'Transaksi Baru',
-                    assetPath: 'assets/images/pos.png',
-                    icon: Icons.point_of_sale_rounded,
-                    color: const Color(0xFFD32F2F),
-                    onTap: () => widget.onNavigateTab(1),
-                  ),
-                  const SizedBox(width: 10),
-                  _buildQuickActionBtn(
-                    title: 'Cek Produk',
-                    subtitle: 'Stok & Harga',
-                    icon: Icons.inventory_2_rounded,
-                    color: Colors.blue.shade700,
-                    onTap: () => widget.onNavigateTab(2),
-                  ),
-                  const SizedBox(width: 10),
-                  _buildQuickActionBtn(
-                    title: 'Penjualan',
-                    subtitle: 'Riwayat Struk',
-                    assetPath: 'assets/images/penjualan.png',
-                    icon: Icons.receipt_long_rounded,
-                    color: Colors.teal.shade700,
-                    onTap: () => widget.onNavigateTab(3),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // ── 4. TRANSAKSI TERBARU HARI INI ────────────────────────────
               Row(
@@ -401,10 +501,10 @@ class _DashboardTabState extends State<DashboardTab> {
               ),
 
               if (_isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+                Column(
+                  children: List.generate(
+                    4,
+                    (index) => const SkeletonTransactionTile(),
                   ),
                 )
               else if (_recentSales.isEmpty)
@@ -500,13 +600,15 @@ class _DashboardTabState extends State<DashboardTab> {
             ],
           ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  ),
+),
+);
+}
 
   Widget _buildQuickActionBtn({
     required String title,
-    required String subtitle,
     IconData? icon,
     String? assetPath,
     required Color color,
@@ -517,58 +619,41 @@ class _DashboardTabState extends State<DashboardTab> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: assetPath != null
                       ? Image.asset(
                           assetPath,
-                          width: 22,
-                          height: 22,
+                          width: 24,
+                          height: 24,
                           color: color,
                           colorBlendMode: BlendMode.srcIn,
                           errorBuilder: (context, error, stackTrace) =>
-                              Icon(icon ?? Icons.circle, color: color, size: 22),
+                              Icon(icon ?? Icons.circle, color: color, size: 24),
                         )
-                      : Icon(icon ?? Icons.circle, color: color, size: 22),
+                      : Icon(icon ?? Icons.circle, color: color, size: 24),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2B2B2B),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -584,6 +669,7 @@ class _DashboardTabState extends State<DashboardTab> {
     required IconData icon,
     required Color color,
     String? subtitle,
+    bool isLoading = false,
     VoidCallback? onTap,
   }) {
     return Material(
@@ -621,39 +707,47 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: Icon(icon, color: color, size: 18),
                   ),
                   if (subtitle != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                      ),
-                    ),
+                    isLoading
+                        ? const AppSkeleton(width: 40, height: 14, borderRadius: 6)
+                        : Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              subtitle,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                          ),
                 ],
               ),
               const SizedBox(height: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF2B2B2B),
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                      child: AppSkeleton(width: 70, height: 16, borderRadius: 4),
+                    )
+                  else
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF2B2B2B),
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 2),
                   Text(
                     title,
@@ -674,3 +768,6 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 }
+
+
+

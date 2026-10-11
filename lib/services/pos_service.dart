@@ -14,7 +14,7 @@ class PosService {
   PosService._internal();
 
   /// IP Server Backend Laravel Anda (dapat diubah langsung di baris ini)
-  static const String serverIp = '192.168.1.6';
+  static const String serverIp = '192.168.1.5';
   static const String serverPort = '8000';
   static const String defaultBaseUrl = 'http://$serverIp:$serverPort/api/pos';
 

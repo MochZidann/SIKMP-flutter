@@ -106,6 +106,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                   icon: Icons.dashboard_outlined,
                   selectedIcon: Icons.dashboard_rounded,
                   label: 'Dashboard',
+                  iconSize: 24,
                 ),
                 // 2. POS
                 _buildNavItem(
@@ -114,6 +115,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                   icon: Icons.point_of_sale_outlined,
                   selectedIcon: Icons.point_of_sale_rounded,
                   label: 'POS',
+                  iconSize: 28,
                 ),
 
                 // 3. Tombol Scan QR (Di tengah, rata bawah, tanpa teks, style gradasi bulat seperti semula)
@@ -169,6 +171,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                   icon: Icons.inventory_2_outlined,
                   selectedIcon: Icons.inventory_2_rounded,
                   label: 'Produk',
+                  iconSize: 24,
                 ),
                 // 5. Penjualan
                 _buildNavItem(
@@ -177,6 +180,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
                   icon: Icons.receipt_long_outlined,
                   selectedIcon: Icons.receipt_long_rounded,
                   label: 'Penjualan',
+                  iconSize: 24,
                 ),
               ],
             ),
@@ -192,6 +196,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
     IconData? icon,
     IconData? selectedIcon,
     required String label,
+    double iconSize = 24.0,
   }) {
     final isSelected = _currentIndex == index;
     const primaryColor = Color(0xFFD32F2F);
@@ -205,25 +210,29 @@ class _KasirMainPageState extends State<KasirMainPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (assetPath != null)
-              Image.asset(
-                assetPath,
-                width: 23,
-                height: 23,
-                color: isSelected ? primaryColor : unselectedColor,
-                colorBlendMode: BlendMode.srcIn,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  isSelected ? (selectedIcon ?? icon ?? Icons.circle) : (icon ?? Icons.circle),
-                  color: isSelected ? primaryColor : unselectedColor,
-                  size: 24,
-                ),
-              )
-            else if (icon != null)
-              Icon(
-                isSelected ? (selectedIcon ?? icon) : icon,
-                color: isSelected ? primaryColor : unselectedColor,
-                size: 24,
+            SizedBox(
+              height: 28,
+              child: Center(
+                child: assetPath != null
+                    ? Image.asset(
+                        assetPath,
+                        width: iconSize,
+                        height: iconSize,
+                        color: isSelected ? primaryColor : unselectedColor,
+                        colorBlendMode: BlendMode.srcIn,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          isSelected ? (selectedIcon ?? icon ?? Icons.circle) : (icon ?? Icons.circle),
+                          color: isSelected ? primaryColor : unselectedColor,
+                          size: 24,
+                        ),
+                      )
+                    : Icon(
+                        isSelected ? (selectedIcon ?? icon) : icon,
+                        color: isSelected ? primaryColor : unselectedColor,
+                        size: iconSize,
+                      ),
               ),
+            ),
             const SizedBox(height: 4),
             Text(
               label,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_helper.dart';
+import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../models/owner_models.dart';
 import '../../../services/owner_service.dart';
 
@@ -112,32 +113,78 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
       onRefresh: _loadDashboardData,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: EdgeInsets.zero,
         children: [
-          // 1. Smart Executive Insights Card
-          _buildInsightsCard(data),
+          // ── HEADER OWNER DENGAN BACKGROUND MELENGKUNG ──
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Background Teal Melengkung di Tengah ke Bawah
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 35,
+                child: ClipPath(
+                  clipper: const HeaderCurveClipper(),
+                  child: Container(
+                    color: const Color(0xFF00796B),
+                  ),
+                ),
+              ),
 
-          const SizedBox(height: 16),
+              // Card 2 Layer (Layer 1: Putih, Layer 2: Teal Solid Insights)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(10),
+                    child: _buildInsightsCard(data),
+                  ),
+                ),
+              ),
+            ],
+          ),
 
-          // 2. Grid KPI Cards (2x2)
-          _buildKpiGrid(data),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 2. Grid KPI Cards (2x2)
+                _buildKpiGrid(data),
 
-          const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-          // 3. Tren Penjualan 7 Hari Terakhir
-          _buildSalesTrendCard(data.salesTrend),
+                // 3. Tren Penjualan 7 Hari Terakhir
+                _buildSalesTrendCard(data.salesTrend),
 
-          const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-          // 4. Top 5 Produk Terlaris
-          _buildTopProductsCard(data.topProducts),
+                // 4. Top 5 Produk Terlaris
+                _buildTopProductsCard(data.topProducts),
 
-          const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-          // 5. Transaksi Terkini
-          _buildRecentSalesCard(data.recentSales),
-
-          const SizedBox(height: 32),
+                // 5. Transaksi Terkini
+                _buildRecentSalesCard(data.recentSales),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -150,17 +197,13 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF004D40), Color(0xFF00796B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFF00796B),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF004D40).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF00796B).withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),

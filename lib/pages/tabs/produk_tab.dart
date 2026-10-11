@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/widgets/app_skeleton.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../core/widgets/product_image_widget.dart';
 import '../../models/product.dart';
@@ -179,8 +180,11 @@ class _ProdukTabState extends State<ProdukTab> {
         // ── DAFTAR PRODUK (LIST VIEW) ────────────────────────────────────
         Expanded(
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+              ? ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 6,
+                  itemBuilder: (context, index) => const SkeletonProductTile(),
                 )
               : _filteredProducts.isEmpty
                   ? Center(

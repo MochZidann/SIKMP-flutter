@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../core/widgets/app_skeleton.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../models/sale_record.dart';
 import '../../services/auth_service.dart';
@@ -740,8 +741,11 @@ class _PenjualanTabState extends State<PenjualanTab> {
           // ── LIST TRANSAKSI ───────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+                ? ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 6,
+                    itemBuilder: (context, index) => const SkeletonTransactionTile(),
                   )
                 : _sales.isEmpty
                     ? Center(
