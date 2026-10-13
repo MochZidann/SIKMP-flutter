@@ -7,6 +7,7 @@ import '../../models/sale_record.dart';
 import '../../services/auth_service.dart';
 import '../../services/pos_service.dart';
 import '../login_page.dart';
+import '../pos/widgets/pos_closing_sheet.dart';
 
 class DashboardTab extends StatefulWidget {
   final Function(int) onNavigateTab;
@@ -79,15 +80,21 @@ class DashboardTabState extends State<DashboardTab> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Keluar dari Akun?'),
-        content: const Text('Apakah Anda yakin ingin logout dari akun kasir?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Keluar dari Akun Kasir?'),
+        content: const Text(
+          'Sebelum logout, disarankan melakukan Tutup Kasir (Closing Shift) agar laporan penjualan hari ini otomatis terkirim ke Owner.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Batal'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD32F2F)),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.grey.shade800,
+              side: BorderSide(color: Colors.grey.shade400),
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               AuthService().logout();
@@ -97,7 +104,15 @@ class DashboardTabState extends State<DashboardTab> {
                 (route) => false,
               );
             },
-            child: const Text('Ya, Logout', style: TextStyle(color: Colors.white)),
+            child: const Text('Logout Saja'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD32F2F)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              PosClosingSheet.show(context, onClosingSuccess: _loadDashboardData);
+            },
+            child: const Text('Tutup Kasir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -158,6 +173,11 @@ class DashboardTabState extends State<DashboardTab> {
         foregroundColor: Colors.white,
         title: const AppTopBarTitle(roleName: 'Kasir'),
         actions: [
+          IconButton(
+            tooltip: 'Tutup Kasir / Closing Shift',
+            icon: const Icon(Icons.storefront_rounded),
+            onPressed: () => PosClosingSheet.show(context, onClosingSuccess: _loadDashboardData),
+          ),
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout_rounded),
@@ -379,6 +399,13 @@ class DashboardTabState extends State<DashboardTab> {
                                       icon: Icons.receipt_long_rounded,
                                       color: Colors.teal.shade700,
                                       onTap: () => widget.onNavigateTab(3),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildQuickActionBtn(
+                                      title: 'Tutup Kasir',
+                                      icon: Icons.storefront_rounded,
+                                      color: const Color(0xFF8E0000),
+                                      onTap: () => PosClosingSheet.show(context, onClosingSuccess: _loadDashboardData),
                                     ),
                                   ],
                                 ),

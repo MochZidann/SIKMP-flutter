@@ -238,4 +238,67 @@ class PosService {
       );
     }
   }
+
+  /// Ambil ringkasan performa penjualan kasir untuk persiapan Tutup Kasir
+  Future<Map<String, dynamic>?> getClosingSummary({int? cashierId}) async {
+    try {
+      final queryParams = <String, String>{};
+      if (cashierId != null) queryParams['cashierId'] = cashierId.toString();
+
+      final uri = Uri.parse('$baseUrl/closing-summary').replace(
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      final response = await http.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] is Map<String, dynamic>) {
+          return data['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getClosingSummary: $e');
+      return null;
+    }
+  }
+
+  /// Eksekusi Tutup Kasir (Closing Shift)
+  Future<Map<String, dynamic>?> closeShift({
+    int? cashierId,
+    int actualCash = 0,
+    String notes = '',
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl/close-shift');
+      final bodyMap = <String, dynamic>{
+        'actualCash': actualCash,
+        'notes': notes,
+      };
+      if (cashierId != null) {
+        bodyMap['cashierId'] = cashierId;
+      }
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(bodyMap),
+      ).timeout(const Duration(seconds: 12));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error closeShift: $e');
+      return null;
+    }
+  }
 }

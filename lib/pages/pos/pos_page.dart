@@ -9,6 +9,7 @@ import 'widgets/pos_checkout_bar.dart';
 import 'widgets/pos_product_catalog.dart';
 import 'widgets/pos_receipt_dialog.dart';
 import 'widgets/qris_modal_bottom_sheet.dart';
+import 'widgets/pos_closing_sheet.dart';
 
 class PosPage extends StatefulWidget {
   final bool isEmbedded;
@@ -342,6 +343,11 @@ class PosPageState extends State<PosPage> {
                 );
               },
             ),
+          IconButton(
+            tooltip: 'Tutup Kasir / Closing Shift',
+            icon: const Icon(Icons.storefront_rounded),
+            onPressed: () => PosClosingSheet.show(context, onClosingSuccess: () => widget.onSaleCompleted?.call()),
+          ),
           IconButton(
             tooltip: 'Keranjang Belanja',
             icon: Badge(

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/api_config.dart';
@@ -54,7 +54,7 @@ class FcmService {
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       // 2. Setup Android Local Notifications untuk menampilkan notifikasi saat aplikasi dibuka (Foreground)
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings('@drawable/ic_stat_kopdes');
       const initSettings = InitializationSettings(android: androidSettings);
 
       await _localNotifications.initialize(
@@ -137,11 +137,21 @@ class FcmService {
           _highPriorityChannel.id,
           _highPriorityChannel.name,
           channelDescription: _highPriorityChannel.description,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_stat_kopdes',
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+          color: const Color(0xFFD32F2F),
+          ledColor: const Color(0xFFD32F2F),
+          ledOnMs: 1000,
+          ledOffMs: 500,
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
           enableVibration: true,
+          styleInformation: BigTextStyleInformation(
+            notification.body ?? '',
+            contentTitle: notification.title,
+            summaryText: 'Kopdes Merah Putih',
+          ),
         ),
       ),
       payload: jsonEncode(message.data),
