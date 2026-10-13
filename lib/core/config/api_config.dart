@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// untuk seluruh modul aplikasi (Auth, POS, Gudang, Admin, Owner).
 class ApiConfig {
   /// Alamat IP Server Backend (dapat diubah langsung di baris ini)
-  static const String defaultServerIp = '192.168.1.202';
+  static const String defaultServerIp = '192.168.1.5';
 
   /// Port Server Backend Laravel (default: 8000)
   static const String defaultServerPort = '8000';
@@ -44,12 +44,21 @@ class ApiConfig {
     serverPort = defaultServerPort;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedIp = prefs.getString('custom_server_ip');
-      if (savedIp != null && savedIp.isNotEmpty && savedIp != '192.168.1.6' && savedIp != '192.168.1.5') {
-        serverIp = savedIp;
-      } else {
+      final lastDefaultIp = prefs.getString('last_default_server_ip');
+
+      // Jika programmer baru saja mengganti defaultServerIp di kode, sinkronkan ke IP baru
+      if (lastDefaultIp != defaultServerIp) {
         serverIp = defaultServerIp;
         await prefs.setString('custom_server_ip', defaultServerIp);
+        await prefs.setString('last_default_server_ip', defaultServerIp);
+      } else {
+        final savedIp = prefs.getString('custom_server_ip');
+        if (savedIp != null && savedIp.isNotEmpty) {
+          serverIp = savedIp;
+        } else {
+          serverIp = defaultServerIp;
+          await prefs.setString('custom_server_ip', defaultServerIp);
+        }
       }
     } catch (_) {}
   }

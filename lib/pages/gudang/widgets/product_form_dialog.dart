@@ -351,11 +351,32 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         uploadedSupabaseUrl = await SupabaseService.uploadProductImage(
           bytes: _pickedImageBytes!,
           fileName: filename,
+          oldImageUrl: _isEdit ? widget.product?.imagePath : null,
+          cleanProductName: _nameCtrl.text.trim(),
         );
+
+        // Jika nama barang diganti saat edit, bersihkan juga gambar lama dengan nama sebelumnya
+        if (_isEdit && widget.product != null && widget.product!.name.trim() != _nameCtrl.text.trim()) {
+          await SupabaseService.cleanOldProductImages(productName: widget.product!.name);
+        }
       } catch (e) {
         debugPrint('Supabase upload exception: $e');
       }
+    } else if (_isEdit && _removeImage && SupabaseService.isConfigured) {
+      // User secara eksplisit memilih hapus foto barang
+      try {
+        if (widget.product?.imagePath != null) {
+          await SupabaseService.deleteProductImage(widget.product!.imagePath);
+        }
+        await SupabaseService.cleanOldProductImages(productName: _nameCtrl.text.trim());
+        if (widget.product != null && widget.product!.name.trim() != _nameCtrl.text.trim()) {
+          await SupabaseService.cleanOldProductImages(productName: widget.product!.name);
+        }
+      } catch (e) {
+        debugPrint('Supabase delete exception: $e');
+      }
     }
+
 
     final result = _isEdit
         ? await _gudangService.updateProduct(

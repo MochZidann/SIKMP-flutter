@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'core/config/api_config.dart';
 import 'pages/splash/splash_page.dart';
 import 'services/fcm_service.dart';
+import 'services/sound_service.dart';
 import 'services/supabase_service.dart';
 
 void main() async {
@@ -10,6 +11,7 @@ void main() async {
   await initializeDateFormatting('id_ID', null);
   await ApiConfig.init();
   await SupabaseService.init();
+  await SoundService.init();
   await FcmService().init();
   runApp(const KopdesApp());
 }

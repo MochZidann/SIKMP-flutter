@@ -4,6 +4,7 @@ import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/product.dart';
 import '../../../services/gudang_service.dart';
+import '../../../services/supabase_service.dart';
 import '../widgets/product_form_dialog.dart';
 import '../widgets/stock_adjust_dialog.dart';
 import '../widgets/stock_in_dialog.dart';
@@ -122,6 +123,13 @@ class _GudangStockTabState extends State<GudangStockTab> {
               final result = await _gudangService.deleteProduct(product.id);
               if (mounted) {
                 if (result['success'] == true) {
+                  // Bersihkan foto barang dari Supabase Storage jika ada
+                  if (SupabaseService.isConfigured) {
+                    if (product.imagePath != null) {
+                      SupabaseService.deleteProductImage(product.imagePath);
+                    }
+                    SupabaseService.cleanOldProductImages(productName: product.name);
+                  }
                   _loadProducts();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

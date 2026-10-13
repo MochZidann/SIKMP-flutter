@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../services/sound_service.dart';
 
 /// Modal pemindai barcode kamera performa tinggi & berproteksi keamanan data.
 /// Mendukung mode single-scan (langsung tutup) dan mode continuous (kamera tetap menyala untuk banyak barang).
@@ -154,6 +155,9 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet>
           // Haptic feedback fisik ke kasir
           HapticFeedback.mediumImpact();
 
+          // Efek audio "beep" pemindai barcode
+          SoundService.playBarcodeBeep();
+
           // Efek visual flash hijau pada viewfinder
           _triggerSuccessFlash();
 
@@ -180,6 +184,9 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet>
           _hasDetected = true;
           setState(() => _isProcessing = true);
           HapticFeedback.mediumImpact();
+
+          // Efek audio "beep" pemindai barcode
+          SoundService.playBarcodeBeep();
 
           try {
             if (widget.onScanned != null) {

@@ -3,6 +3,7 @@ import 'package:flutter_kop/core/widgets/barcode_scanner_sheet.dart';
 import 'package:flutter_kop/core/widgets/product_image_widget.dart';
 import 'package:flutter_kop/models/product.dart';
 import 'package:flutter_kop/services/gudang_service.dart';
+import 'package:flutter_kop/services/supabase_service.dart';
 
 void main() {
   group('Admin Gudang CRUD & Security Unit Tests', () {
@@ -123,6 +124,34 @@ void main() {
       final resolvedWithStorage = ProductImageWidget.resolveUrl('storage/products/mie.jpg');
       expect(resolvedWithStorage, contains('/storage/products/mie.jpg'));
       expect(resolvedWithStorage, isNot(contains('/storage/storage')));
+    });
+
+    test('SupabaseService detects Supabase URLs and parses bucket & relative path correctly', () {
+      expect(SupabaseService.isSupabaseUrl(null), isFalse);
+      expect(SupabaseService.isSupabaseUrl(''), isFalse);
+      expect(SupabaseService.isSupabaseUrl('products/kopi.jpg'), isFalse);
+      expect(SupabaseService.isSupabaseUrl('http://192.168.1.10/storage/products/kopi.jpg'), isFalse);
+
+      const supabaseUrl =
+          'https://ltuxfidbgkvbxmxmmcqb.supabase.co/storage/v1/object/public/product-images/products/prod_lilin_batang_6_pcs_1791720856946.jpg';
+      expect(SupabaseService.isSupabaseUrl(supabaseUrl), isTrue);
+
+      final parsed = SupabaseService.parseSupabaseStorageUrl(supabaseUrl);
+      expect(parsed, isNotNull);
+      expect(parsed?.bucket, 'product-images');
+      expect(parsed?.path, 'products/prod_lilin_batang_6_pcs_1791720856946.jpg');
+
+      final parsedRelative = SupabaseService.parseSupabaseStorageUrl('products/prod_test.jpg');
+      expect(parsedRelative, isNotNull);
+      expect(parsedRelative?.path, 'products/prod_test.jpg');
+
+      // Test regex pattern for matching only the target product's timestamped files
+      final cleanName = 'lilin_batang_6_pcs';
+      final pattern = RegExp('^prod_${RegExp.escape(cleanName)}_\\d+\\.(jpg|jpeg|png|webp)\$');
+      expect(pattern.hasMatch('prod_lilin_batang_6_pcs_1791720856946.jpg'), isTrue);
+      expect(pattern.hasMatch('prod_lilin_batang_6_pcs_1791720999999.jpg'), isTrue);
+      expect(pattern.hasMatch('prod_lilin_batang_6_pcs_jumbo_1791720856946.jpg'), isFalse);
+      expect(pattern.hasMatch('prod_tisu_wajah_50_lembar_1791611493538.jpg'), isFalse);
     });
   });
 }
