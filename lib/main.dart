@@ -9,15 +9,32 @@ import 'services/supabase_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
-  await ApiConfig.init();
-  await SupabaseService.init();
-  await SoundService.init();
-  await FcmService().init();
-  runApp(const KopdesApp());
+
+  // Inisialisasi background services secara paralel agar frame pertama Flutter
+  // dirender seketika (<100ms) tanpa jeda layar hitam (black screen lag)
+  final initServicesFuture = _initBackgroundServices();
+
+  runApp(KopdesApp(initFuture: initServicesFuture));
+}
+
+/// Menjalankan konfigurasi & inisialisasi modul pihak ketiga secara paralel di background
+Future<void> _initBackgroundServices() async {
+  try {
+    await Future.wait([
+      ApiConfig.init(),
+      SupabaseService.init(),
+      SoundService.init(),
+      FcmService().init(),
+    ]);
+  } catch (e) {
+    debugPrint('Background services init warning: $e');
+  }
 }
 
 class KopdesApp extends StatelessWidget {
-  const KopdesApp({super.key});
+  final Future<void>? initFuture;
+
+  const KopdesApp({super.key, this.initFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +58,7 @@ class KopdesApp extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
         ),
       ),
-      home: const SplashPage(),
+      home: SplashPage(initFuture: initFuture),
     );
   }
 }

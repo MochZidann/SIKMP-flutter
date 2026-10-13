@@ -8,187 +8,167 @@ import '../login_page.dart';
 import '../owner/owner_main_page.dart';
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  final Future<void>? initFuture;
+
+  const SplashPage({super.key, this.initFuture});
 
   @override
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-  Timer? _timer;
+class _SplashPageState extends State<SplashPage> {
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
-
-    // 1. Controller untuk durasi animasi (1.5 detik)
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    // 2. Animasi Membesar (Scale dari 0.6x ke 1.0x dengan kurva membal halus)
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    );
-
-    // 3. Animasi Muncul Halus (Fade In dari transparan ke pekat)
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-
-    // Mulai animasi
-    _controller.forward();
-
-    // 4. Timer 3 detik sebelum otomatis pindah ke Login atau Kasir
-    _timer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        final user = AuthService().currentUser;
-        Widget targetPage = const LoginPage();
-        if (AuthService().isLoggedIn && user != null) {
-          if (user.isAdmin) {
-            targetPage = const AdminMainPage();
-          } else if (user.isGudang) {
-            targetPage = const GudangMainPage();
-          } else if (user.isKasir) {
-            targetPage = const KasirMainPage();
-          } else if (user.isOwner) {
-            targetPage = const OwnerMainPage();
-          }
-        }
-
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 800),
-            pageBuilder: (context, animation, secondaryAnimation) => targetPage,
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          ),
-        );
-      }
-    });
+    // Jalankan inisialisasi services & navigasi otomatis
+    _startStartupFlow();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _controller.dispose();
-    super.dispose();
+  Future<void> _startStartupFlow() async {
+    final stopwatch = Stopwatch()..start();
+
+    // Tunggu background services selesai diinisialisasi (maksimal 4 detik agar tidak stuck jika offline)
+    if (widget.initFuture != null) {
+      try {
+        await widget.initFuture!.timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint('⚠️ [Splash] Inisialisasi background service melebihi batas waktu 4 detik.');
+          },
+        );
+      } catch (e) {
+        debugPrint('Splash init error: $e');
+      }
+    }
+
+    // Tampilkan splash screen selama 2 detik
+    final elapsed = stopwatch.elapsedMilliseconds;
+    final remaining = 2000 - elapsed;
+    if (remaining > 0) {
+      await Future.delayed(Duration(milliseconds: remaining));
+    }
+
+    if (!mounted || _hasNavigated) return;
+    _hasNavigated = true;
+
+    final user = AuthService().currentUser;
+    Widget targetPage = const LoginPage();
+    if (AuthService().isLoggedIn && user != null) {
+      if (user.isAdmin) {
+        targetPage = const AdminMainPage();
+      } else if (user.isGudang) {
+        targetPage = const GudangMainPage();
+      } else if (user.isKasir) {
+        targetPage = const KasirMainPage();
+      } else if (user.isOwner) {
+        targetPage = const OwnerMainPage();
+      }
+    }
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) => targetPage,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFD32F2F), Color(0xFF8E0000)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      backgroundColor: const Color(0xFF8E0000),
+      body: SizedBox.expand(
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
 
-              // Logo & Judul dengan Animasi Fade & Scale
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    children: [
-                      // Logo Resmi SIKMP KOP DES KEL
-                      Image.asset(
-                        'assets/images/sikmp_white.png',
-                        height: 130,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(height: 20),
+              // Logo Resmi SIKMP KOP DES KEL
+              Image.asset(
+                'assets/images/sikmp_white.png',
+                height: 140,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 20),
 
-                      // Teks Brand
-                      const Text(
-                        'KOPDES',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 4,
-                        ),
-                      ),
-                      const Text(
-                        'MERAH PUTIH',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: 6,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'Membangun Ekonomi Desa Mandiri',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
+              // Teks Brand Kopdes Merah Putih
+              const Text(
+                'KOPDES',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 4,
+                ),
+              ),
+              const Text(
+                'MERAH PUTIH',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 6,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Membangun Ekonomi Desa Mandiri',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
 
               const Spacer(),
 
-              // Loading Indikator & Footer Versi
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
+              // Loading Spinner Langsung Aktif di Tengah Bawah
+              const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3.0,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Versi 1.0.0',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                        letterSpacing: 1,
-                      ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Versi 1.0.0',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                      letterSpacing: 1,
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
