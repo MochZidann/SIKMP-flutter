@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// untuk seluruh modul aplikasi (Auth, POS, Gudang, Admin, Owner).
 class ApiConfig {
   /// Alamat IP Server Backend (dapat diubah langsung di baris ini)
-  static const String defaultServerIp = '192.168.1.5';
+  static const String defaultServerIp = '10.171.5.101';
 
   /// Port Server Backend Laravel (default: 8000)
   static const String defaultServerPort = '8000';

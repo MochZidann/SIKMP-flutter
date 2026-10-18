@@ -9,6 +9,12 @@ class SaleRecord {
   final int total;
   final String paymentMethod;
   final String status;
+  final int? memberId;
+  final String? memberNo;
+  final int pointsEarned;
+  final int pointsRedeemed;
+  final int pointsDiscount;
+  final int memberDiscount;
   final int createdAtEpochMs;
   final List<SaleRecordItem> items;
 
@@ -23,6 +29,12 @@ class SaleRecord {
     required this.total,
     required this.paymentMethod,
     required this.status,
+    this.memberId,
+    this.memberNo,
+    this.pointsEarned = 0,
+    this.pointsRedeemed = 0,
+    this.pointsDiscount = 0,
+    this.memberDiscount = 0,
     required this.createdAtEpochMs,
     required this.items,
   });
@@ -53,6 +65,36 @@ class SaleRecord {
           .toInt(),
       paymentMethod: json['paymentMethod']?.toString() ?? 'TUNAI',
       status: json['status']?.toString() ?? 'SUCCESS',
+      memberId: json['memberId'] is int
+          ? json['memberId']
+          : (json['member_id'] is int
+              ? json['member_id']
+              : int.tryParse(json['memberId']?.toString() ?? json['member_id']?.toString() ?? '')),
+      memberNo: json['memberNo']?.toString() ?? json['member_no']?.toString(),
+      pointsEarned: (json['pointsEarned'] is num
+              ? json['pointsEarned']
+              : (json['points_earned'] is num
+                  ? json['points_earned']
+                  : num.tryParse(json['pointsEarned']?.toString() ?? json['points_earned']?.toString() ?? '0') ?? 0))
+          .toInt(),
+      pointsRedeemed: (json['pointsRedeemed'] is num
+              ? json['pointsRedeemed']
+              : (json['points_redeemed'] is num
+                  ? json['points_redeemed']
+                  : num.tryParse(json['pointsRedeemed']?.toString() ?? json['points_redeemed']?.toString() ?? '0') ?? 0))
+          .toInt(),
+      pointsDiscount: (json['pointsDiscount'] is num
+              ? json['pointsDiscount']
+              : (json['points_discount'] is num
+                  ? json['points_discount']
+                  : num.tryParse(json['pointsDiscount']?.toString() ?? json['points_discount']?.toString() ?? '0') ?? 0))
+          .toInt(),
+      memberDiscount: (json['memberDiscount'] is num
+              ? json['memberDiscount']
+              : (json['member_discount'] is num
+                  ? json['member_discount']
+                  : num.tryParse(json['memberDiscount']?.toString() ?? json['member_discount']?.toString() ?? '0') ?? 0))
+          .toInt(),
       createdAtEpochMs: json['createdAtEpochMs'] is int
           ? json['createdAtEpochMs']
           : int.tryParse(json['createdAtEpochMs']?.toString() ?? '0') ?? 0,

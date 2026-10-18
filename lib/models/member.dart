@@ -4,6 +4,7 @@ class Member {
   final String name;
   final String? phone;
   final String? address;
+  final int points;
   final bool isActive;
   final int? createdAtEpochMs;
 
@@ -13,6 +14,7 @@ class Member {
     required this.name,
     this.phone,
     this.address,
+    this.points = 0,
     this.isActive = true,
     this.createdAtEpochMs,
   });
@@ -24,6 +26,9 @@ class Member {
       name: json['name']?.toString() ?? '',
       phone: json['phone']?.toString(),
       address: json['address']?.toString(),
+      points: json['points'] is int
+          ? json['points']
+          : int.tryParse(json['points']?.toString() ?? '0') ?? 0,
       isActive: json['isActive'] == 1 || json['isActive'] == true || json['is_active'] == 1 || json['is_active'] == true,
       createdAtEpochMs: json['createdAtEpochMs'] is int
           ? json['createdAtEpochMs']
@@ -38,6 +43,7 @@ class Member {
       'name': name,
       'phone': phone,
       'address': address,
+      'points': points,
       'isActive': isActive ? 1 : 0,
       'createdAtEpochMs': createdAtEpochMs,
     };

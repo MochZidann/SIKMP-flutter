@@ -4,6 +4,7 @@ class Product {
   final String? barcode;
   final String? category;
   final int price;
+  final int? memberPrice;
   final int stock;
   final int purchasePrice;
   final int minimumStock;
@@ -15,6 +16,7 @@ class Product {
     this.barcode,
     this.category,
     required this.price,
+    this.memberPrice,
     required this.stock,
     this.purchasePrice = 0,
     this.minimumStock = 5,
@@ -30,6 +32,7 @@ class Product {
     String? barcode,
     String? category,
     int? price,
+    int? memberPrice,
     int? stock,
     int? purchasePrice,
     int? minimumStock,
@@ -41,6 +44,7 @@ class Product {
       barcode: barcode ?? this.barcode,
       category: category ?? this.category,
       price: price ?? this.price,
+      memberPrice: memberPrice ?? this.memberPrice,
       stock: stock ?? this.stock,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       minimumStock: minimumStock ?? this.minimumStock,
@@ -57,6 +61,13 @@ class Product {
       price: json['price'] is int
           ? json['price']
           : (double.tryParse(json['price']?.toString() ?? '0')?.toInt() ?? 0),
+      memberPrice: json['memberPrice'] is int
+          ? json['memberPrice']
+          : (json['member_price'] is int
+              ? json['member_price']
+              : (json['memberPrice'] != null || json['member_price'] != null
+                  ? double.tryParse(json['memberPrice']?.toString() ?? json['member_price']?.toString() ?? '')?.toInt()
+                  : null)),
       stock: json['stock'] is int
           ? json['stock']
           : (double.tryParse(json['stock']?.toString() ?? '0')?.toInt() ?? 0),
@@ -81,6 +92,7 @@ class Product {
       'barcode': barcode,
       'category': category,
       'price': price,
+      'memberPrice': memberPrice,
       'stock': stock,
       'purchasePrice': purchasePrice,
       'minimumStock': minimumStock,

@@ -10,8 +10,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
 
-  // Inisialisasi background services secara paralel agar frame pertama Flutter
-  // dirender seketika (<100ms) tanpa jeda layar hitam (black screen lag)
   final initServicesFuture = _initBackgroundServices();
 
   runApp(KopdesApp(initFuture: initServicesFuture));
