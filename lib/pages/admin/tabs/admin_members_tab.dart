@@ -47,7 +47,6 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
     return _members.where((m) {
       return query.isEmpty ||
           m.name.toLowerCase().contains(query) ||
-          m.memberNo.toLowerCase().contains(query) ||
           (m.phone != null && m.phone!.toLowerCase().contains(query));
     }).toList();
   }
@@ -66,7 +65,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
               controller: _searchController,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Cari nama, No. Anggota, atau telepon...',
+                hintText: 'Cari nama atau telepon...',
                 hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
                 prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00897B), size: 20),
                 suffixIcon: _searchController.text.isNotEmpty
@@ -107,7 +106,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                     ? EmptyDataView(
                         icon: Icons.card_membership_rounded,
                         title: 'Anggota Tidak Ditemukan',
-                        subtitle: 'Pastikan nama atau nomor anggota sudah sesuai.',
+                        subtitle: 'Pastikan nama atau telepon anggota sudah sesuai.',
                         actionLabel: 'Muat Ulang',
                         onAction: _loadMembers,
                       )
@@ -146,36 +145,15 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                m.name,
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: m.isActive ? Colors.green.shade50 : Colors.red.shade50,
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                m.isActive ? 'AKTIF' : 'NON-AKTIF',
-                                                style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: m.isActive ? Colors.green.shade800 : Colors.red.shade800,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                        Text(
+                                          m.name,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'No: ${m.memberNo} ${m.phone != null && m.phone!.isNotEmpty ? '• ${m.phone}' : ''}',
+                                          m.phone != null && m.phone!.isNotEmpty ? m.phone! : 'Tanpa nomor telepon',
                                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                         ),
                                         if (m.address != null && m.address!.isNotEmpty) ...[
@@ -194,6 +172,30 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                             style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
                                           ),
                                         ],
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.shade50,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.amber.shade200),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.stars_rounded, size: 14, color: Colors.amber.shade700),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${m.points} Poin',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.amber.shade900,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
