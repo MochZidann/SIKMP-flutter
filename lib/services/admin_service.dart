@@ -161,15 +161,18 @@ class AdminService {
   // ── ANGGOTA & AUDIT LOGS ─────────────────────────────────────
 
   /// Mengambil daftar anggota koperasi
-  Future<List<Member>> getMembers() async {
+  Future<List<Member>> getMembers({String? search}) async {
     try {
-      final uri = Uri.parse('$syncBaseUrl/members');
+      final uri = Uri.parse(ApiConfig.membersUrl).replace(queryParameters: {
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      });
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final dynamic data = json.decode(response.body);
-        if (data is List) {
-          return data.map((item) => Member.fromJson(item)).toList();
+        final dynamic decoded = json.decode(response.body);
+        final dynamic dataList = decoded is Map && decoded['data'] != null ? decoded['data'] : decoded;
+        if (dataList is List) {
+          return dataList.map((item) => Member.fromJson(item)).toList();
         }
       }
       return [];
@@ -178,6 +181,123 @@ class AdminService {
       return [];
     }
   }
+
+  /// Menambahkan anggota koperasi baru
+  Future<Map<String, dynamic>> createMember({
+    required String name,
+    String? phone,
+    String? address,
+    int points = 0,
+  }) async {
+    try {
+      final uri = Uri.parse(ApiConfig.membersUrl);
+      final body = {
+        'name': name.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        if (address != null && address.trim().isNotEmpty) 'address': address.trim(),
+        'points': points,
+      };
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Anggota berhasil ditambahkan',
+          'member': data['data'] != null ? Member.fromJson(data['data']) : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal menambahkan anggota',
+        };
+      }
+    } catch (e) {
+      debugPrint('AdminService createMember error: $e');
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke server: $e',
+      };
+    }
+  }
+
+  /// Memperbarui data anggota
+  Future<Map<String, dynamic>> updateMember(
+    int id, {
+    required String name,
+    String? phone,
+    String? address,
+    int? points,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.membersUrl}/$id');
+      final Map<String, dynamic> body = {
+        'name': name.trim(),
+      };
+      if (phone != null) body['phone'] = phone.trim();
+      if (address != null) body['address'] = address.trim();
+      if (points != null) body['points'] = points;
+
+      final response = await http.put(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Data anggota berhasil diperbarui',
+          'member': data['data'] != null ? Member.fromJson(data['data']) : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal memperbarui data anggota',
+        };
+      }
+    } catch (e) {
+      debugPrint('AdminService updateMember error: $e');
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke server: $e',
+      };
+    }
+  }
+
+  /// Menghapus anggota dari sistem
+  Future<Map<String, dynamic>> deleteMember(int id) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.membersUrl}/$id');
+      final response = await http.delete(uri).timeout(const Duration(seconds: 10));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Anggota berhasil dihapus',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal menghapus anggota',
+        };
+      }
+    } catch (e) {
+      debugPrint('AdminService deleteMember error: $e');
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke server: $e',
+      };
+    }
+  }
+
 
   /// Mengambil riwayat catatan aktivitas audit log
   Future<List<AuditLog>> getAuditLogs() async {

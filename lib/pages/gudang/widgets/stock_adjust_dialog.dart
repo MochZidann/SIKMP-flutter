@@ -33,9 +33,10 @@ class StockAdjustDialog extends StatefulWidget {
 }
 
 class _StockAdjustDialogState extends State<StockAdjustDialog> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _stockController;
-  final _noteController = TextEditingController(text: 'Hasil Stock Opname Fisik');
-  bool _isLoading = false;
+  final _noteController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -51,44 +52,43 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
   }
 
   Future<void> _submit() async {
-    final newStock = int.tryParse(_stockController.text);
+    if (!_formKey.currentState!.validate()) return;
+
+    final newStock = int.tryParse(_stockController.text.trim());
     if (newStock == null || newStock < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nominal stok fisik tidak valid')),
+        const SnackBar(
+          content: Text('Nominal stok fisik tidak valid (minimal 0)'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
-    if (newStock == widget.product.stock) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Stok baru sama dengan stok saat ini.')),
-      );
-      return;
-    }
+    setState(() => _isSubmitting = true);
 
-    setState(() => _isLoading = true);
-    final success = await GudangService().adjustStock(
+    final res = await GudangService().adjustStock(
       product: widget.product,
       newStock: newStock,
-      note: _noteController.text.trim(),
+      note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
     );
 
     if (mounted) {
-      setState(() => _isLoading = false);
-      if (success) {
+      setState(() => _isSubmitting = false);
+      if (res['success'] == true) {
         Navigator.pop(context);
         widget.onStockUpdated();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Stok ${widget.product.name} disesuaikan menjadi $newStock unit!'),
-            backgroundColor: const Color(0xFF2E7D32),
+            content: Text(res['message'] ?? 'Penyesuaian stok berhasil disimpan'),
+            backgroundColor: const Color(0xFF2563EB),
             behavior: SnackBarBehavior.floating,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Gagal menyesuaikan stok.'),
+            content: Text(res['message'] ?? 'Gagal menyesuaikan stok'),
             backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
           ),
@@ -99,128 +99,246 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final currentStock = widget.product.stock;
-    final enteredStock = int.tryParse(_stockController.text) ?? currentStock;
-    final delta = enteredStock - currentStock;
+    const primaryBlue = Color(0xFF2563EB);
+    const lightBlue = Color(0xFFDBEAFE);
 
-    return AlertDialog(
+    final enteredStock = int.tryParse(_stockController.text.trim()) ?? widget.product.stock;
+    final delta = enteredStock - widget.product.stock;
+
+    final selisihText = delta > 0
+        ? 'Selisih: +$delta unit'
+        : delta < 0
+            ? 'Selisih: $delta unit'
+            : 'Selisih: +0 unit';
+
+    final selisihColor = delta >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626);
+
+    return Dialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blueGrey.shade50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.tune_rounded, color: Colors.blueGrey.shade700),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Stock Opname / Penyesuaian',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.product.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Stok tercatat sistem: $currentStock unit',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 16),
-
-            const Text('Jumlah Stok Fisik Riil', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _stockController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: 'Stok aktual di gudang',
-                prefixIcon: const Icon(Icons.inventory_rounded, size: 20),
-                isDense: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Selisih Info
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: delta == 0
-                    ? Colors.grey.shade100
-                    : delta > 0
-                        ? Colors.green.shade50
-                        : Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Selisih Stok:', style: TextStyle(fontSize: 11)),
-                  Text(
-                    delta > 0 ? '+$delta unit (Surplus)' : delta < 0 ? '$delta unit (Selisih Kurang)' : '0 (Cocok)',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: delta > 0 ? Colors.green.shade800 : delta < 0 ? Colors.red.shade800 : Colors.grey,
+                  // ── HEADER MODAL ─────────────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: const BoxDecoration(
+                          color: lightBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.sync_rounded,
+                          color: primaryBlue,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Penyesuaian Stok (Opname)',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF4B5563),
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: widget.product.name,
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  const TextSpan(text: '  •  Stok saat ini: '),
+                                  TextSpan(
+                                    text: '${widget.product.stock} unit',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: primaryBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.close_rounded, color: Color(0xFF9CA3AF), size: 22),
+                        onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                  const SizedBox(height: 16),
+
+                  // ── STOK FISIK SEBENARNYA ─────────────────────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4B5563),
+                          ),
+                          children: [
+                            TextSpan(text: 'Stok Fisik Sebenarnya '),
+                            TextSpan(
+                              text: '*',
+                              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        selisihText,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: selisihColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _stockController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: primaryBlue, width: 1.5),
+                      ),
                     ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
+                      final n = int.tryParse(v.trim());
+                      if (n == null || n < 0) return 'Stok minimal 0';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── CATATAN / ALASAN PENYESUAIAN (OPSIONAL) ────────────
+                  const Text(
+                    'Catatan / Alasan Penyesuaian (Opsional)',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4B5563),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _noteController,
+                    decoration: InputDecoration(
+                      hintText: 'Hasil stock opname bulanan...',
+                      hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF9CA3AF)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: primaryBlue, width: 1.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+
+                  // ── ACTION BUTTONS ───────────────────────────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          foregroundColor: const Color(0xFF374151),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        ),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Simpan Penyesuaian',
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                              ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-
-            const Text('Alasan Penyesuaian', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(
-                hintText: 'Misal: Barang rusak / selisih hitung fisik',
-                prefixIcon: const Icon(Icons.description_outlined, size: 20),
-                isDense: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Batal'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueGrey.shade800,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : const Text('Simpan Opname'),
-        ),
-      ],
     );
   }
 }

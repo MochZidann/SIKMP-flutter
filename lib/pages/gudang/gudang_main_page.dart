@@ -6,6 +6,7 @@ import 'tabs/gudang_category_tab.dart';
 import 'tabs/gudang_dashboard_tab.dart';
 import 'tabs/gudang_inbound_tab.dart';
 import 'tabs/gudang_stock_tab.dart';
+import 'tabs/gudang_suppliers_tab.dart';
 
 class GudangMainPage extends StatefulWidget {
   final int initialIndex;
@@ -85,6 +86,7 @@ class _GudangMainPageState extends State<GudangMainPage> {
           const GudangStockTab(),
           const GudangInboundTab(),
           const GudangCategoryTab(),
+          const GudangSuppliersTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -158,6 +160,12 @@ class _GudangMainPageState extends State<GudangMainPage> {
                 selectedIcon: Icon(Icons.category_rounded),
                 label: 'Kategori',
                 tooltip: 'Daftar Kategori Produk',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.local_shipping_outlined),
+                selectedIcon: Icon(Icons.local_shipping_rounded),
+                label: 'Supplier',
+                tooltip: 'Manajemen Rekanan Supplier',
               ),
             ],
           ),

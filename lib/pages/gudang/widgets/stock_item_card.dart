@@ -7,6 +7,7 @@ import '../../../models/product.dart';
 class StockItemCard extends StatelessWidget {
   final Product product;
   final VoidCallback onStockIn;
+  final VoidCallback onStockOut;
   final VoidCallback onStockAdjust;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -15,6 +16,7 @@ class StockItemCard extends StatelessWidget {
     super.key,
     required this.product,
     required this.onStockIn,
+    required this.onStockOut,
     required this.onStockAdjust,
     this.onEdit,
     this.onDelete,
@@ -111,12 +113,12 @@ class StockItemCard extends StatelessWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                    color: const Color(0xFF059669).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.add_shopping_cart_rounded, color: Color(0xFF2E7D32), size: 20),
+                  child: const Icon(Icons.add_shopping_cart_rounded, color: Color(0xFF059669), size: 20),
                 ),
-                title: const Text('Barang Masuk (Restock)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                title: const Text('Stok Masuk (Pasokan)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 subtitle: const Text('Catat stok masuk resmi dari pengiriman supplier', style: TextStyle(fontSize: 11.5)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -128,12 +130,29 @@ class StockItemCard extends StatelessWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+                    color: const Color(0xFFE11D48).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.tune_rounded, color: Color(0xFF1976D2), size: 20),
+                  child: const Icon(Icons.remove_shopping_cart_rounded, color: Color(0xFFE11D48), size: 20),
                 ),
-                title: const Text('Stock Opname (Penyesuaian)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                title: const Text('Barang Keluar / Retur', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                subtitle: const Text('Catat barang keluar, retur supplier, atau rusak', style: TextStyle(fontSize: 11.5)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onStockOut();
+                },
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.sync_rounded, color: Color(0xFF2563EB), size: 20),
+                ),
+                title: const Text('Penyesuaian Stok (Opname)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 subtitle: const Text('Koreksi jumlah stok sesuai hitungan fisik rak', style: TextStyle(fontSize: 11.5)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -378,6 +397,7 @@ class StockItemCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     onSelected: (val) {
                       if (val == 'stock_in') onStockIn();
+                      if (val == 'stock_out') onStockOut();
                       if (val == 'stock_adjust') onStockAdjust();
                       if (val == 'edit') onEdit?.call();
                       if (val == 'delete') onDelete?.call();
@@ -387,9 +407,19 @@ class StockItemCard extends StatelessWidget {
                         value: 'stock_in',
                         child: Row(
                           children: [
-                            Icon(Icons.add_shopping_cart_rounded, size: 18, color: Color(0xFF2E7D32)),
+                            Icon(Icons.add_shopping_cart_rounded, size: 18, color: Color(0xFF059669)),
                             SizedBox(width: 10),
-                            Text('Barang Masuk', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            Text('Stok Masuk', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'stock_out',
+                        child: Row(
+                          children: [
+                            Icon(Icons.remove_shopping_cart_rounded, size: 18, color: Color(0xFFE11D48)),
+                            SizedBox(width: 10),
+                            Text('Barang Keluar', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -397,9 +427,9 @@ class StockItemCard extends StatelessWidget {
                         value: 'stock_adjust',
                         child: Row(
                           children: [
-                            Icon(Icons.tune_rounded, size: 18, color: Color(0xFF1976D2)),
+                            Icon(Icons.sync_rounded, size: 18, color: Color(0xFF2563EB)),
                             SizedBox(width: 10),
-                            Text('Stock Opname', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            Text('Penyesuaian (Opname)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),

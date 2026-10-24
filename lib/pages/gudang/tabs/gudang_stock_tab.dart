@@ -8,6 +8,7 @@ import '../../../services/supabase_service.dart';
 import '../widgets/product_form_dialog.dart';
 import '../widgets/stock_adjust_dialog.dart';
 import '../widgets/stock_in_dialog.dart';
+import '../widgets/stock_out_dialog.dart';
 import '../widgets/stock_item_card.dart';
 
 class GudangStockTab extends StatefulWidget {
@@ -304,6 +305,13 @@ class _GudangStockTabState extends State<GudangStockTab> {
                               product: product,
                               onStockIn: () {
                                 StockInDialog.show(
+                                  context,
+                                  product: product,
+                                  onStockUpdated: _loadProducts,
+                                );
+                              },
+                              onStockOut: () {
+                                StockOutDialog.show(
                                   context,
                                   product: product,
                                   onStockUpdated: _loadProducts,

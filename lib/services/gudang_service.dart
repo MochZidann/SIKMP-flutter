@@ -51,6 +51,7 @@ class GudangService {
   Future<Map<String, dynamic>> storeProduct(
     Product product, {
     int? userId,
+    int? supplierId,
     String? imageBase64,
     String? imageUrl,
   }) async {
@@ -69,6 +70,7 @@ class GudangService {
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
+        'supplier_id': ?supplierId,
         if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
         if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
       };
@@ -213,117 +215,140 @@ class GudangService {
     }
   }
 
-  /// Mencatat barang masuk (Stock In) dan menambah stok produk
-  Future<bool> recordStockIn({
+  /// Mencatat barang masuk (Stock In / Pasokan) dan menambah stok produk
+  Future<Map<String, dynamic>> recordStockIn({
     required Product product,
     required int quantity,
+    int? supplierId,
+    String? referenceNo,
     String? note,
   }) async {
     try {
       final currentUserId = AuthService().currentUser?.id ?? 1;
-      final nowEpoch = DateTime.now().millisecondsSinceEpoch;
+      final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-in');
+      final payload = <String, dynamic>{
+        'quantity': quantity,
+        'supplier_id': ?supplierId,
+        if (referenceNo != null && referenceNo.trim().isNotEmpty) 'reference_no': referenceNo.trim(),
+        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        'user_id': currentUserId,
+      };
 
-      // 1. Catat mutasi stok
-      final movementUri = Uri.parse('$syncBaseUrl/stock-movements');
-      final movementPayload = [
-        {
-          'productId': product.id,
-          'userId': currentUserId,
-          'type': 'IN',
-          'quantityDelta': quantity,
-          'note': note ?? 'Barang Masuk Gudang',
-          'createdAtEpochMs': nowEpoch,
-        }
-      ];
-
-      final moveRes = await http.post(
-        movementUri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(movementPayload),
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: json.encode(payload),
       ).timeout(const Duration(seconds: 10));
 
-      // 2. Perbarui stok produk
-      final newStock = product.stock + quantity;
-      final productUri = Uri.parse('$syncBaseUrl/products');
-      final prodPayload = [
-        {
-          'id': product.id,
-          'name': product.name,
-          'barcode': product.barcode,
-          'category': product.category,
-          'price': product.price,
-          'stock': newStock,
-          'imagePath': product.imagePath,
-        }
-      ];
-
-      await http.post(
-        productUri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(prodPayload),
-      ).timeout(const Duration(seconds: 10));
-
-      return moveRes.statusCode == 200;
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Stok masuk berhasil dicatat',
+          'product': data['data'] != null ? Product.fromJson(data['data']) : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal mencatat stok masuk',
+        };
+      }
     } catch (e) {
       debugPrint('GudangService recordStockIn error: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'Koneksi ke server bermasalah: $e',
+      };
     }
   }
 
-  /// Melakukan penyesuaian stok (Stock Opname)
-  Future<bool> adjustStock({
+  /// Mencatat barang keluar / retur (Stock Out) dan mengurangi stok produk
+  Future<Map<String, dynamic>> recordStockOut({
+    required Product product,
+    required int quantity,
+    int? supplierId,
+    String? referenceNo,
+    required String note,
+  }) async {
+    try {
+      final currentUserId = AuthService().currentUser?.id ?? 1;
+      final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-out');
+      final payload = <String, dynamic>{
+        'quantity': quantity,
+        'supplier_id': ?supplierId,
+        if (referenceNo != null && referenceNo.trim().isNotEmpty) 'reference_no': referenceNo.trim(),
+        'note': note.trim(),
+        'user_id': currentUserId,
+      };
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: json.encode(payload),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Barang keluar berhasil dicatat',
+          'product': data['data'] != null ? Product.fromJson(data['data']) : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal mencatat barang keluar',
+        };
+      }
+    } catch (e) {
+      debugPrint('GudangService recordStockOut error: $e');
+      return {
+        'success': false,
+        'message': 'Koneksi ke server bermasalah: $e',
+      };
+    }
+  }
+
+  /// Melakukan penyesuaian stok fisik (Stock Opname)
+  Future<Map<String, dynamic>> adjustStock({
     required Product product,
     required int newStock,
     String? note,
   }) async {
     try {
       final currentUserId = AuthService().currentUser?.id ?? 1;
-      final delta = newStock - product.stock;
-      final nowEpoch = DateTime.now().millisecondsSinceEpoch;
+      final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-adjust');
+      final payload = <String, dynamic>{
+        'new_stock': newStock,
+        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        'user_id': currentUserId,
+      };
 
-      // 1. Catat mutasi stok penyesuaian
-      final movementUri = Uri.parse('$syncBaseUrl/stock-movements');
-      final movementPayload = [
-        {
-          'productId': product.id,
-          'userId': currentUserId,
-          'type': 'ADJUST',
-          'quantityDelta': delta,
-          'note': note ?? 'Penyesuaian Stok Fisik (Opname)',
-          'createdAtEpochMs': nowEpoch,
-        }
-      ];
-
-      await http.post(
-        movementUri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(movementPayload),
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: json.encode(payload),
       ).timeout(const Duration(seconds: 10));
 
-      // 2. Perbarui stok produk
-      final productUri = Uri.parse('$syncBaseUrl/products');
-      final prodPayload = [
-        {
-          'id': product.id,
-          'name': product.name,
-          'barcode': product.barcode,
-          'category': product.category,
-          'price': product.price,
-          'stock': newStock,
-          'imagePath': product.imagePath,
-        }
-      ];
-
-      final res = await http.post(
-        productUri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(prodPayload),
-      ).timeout(const Duration(seconds: 10));
-
-      return res.statusCode == 200;
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Penyesuaian stok berhasil disimpan',
+          'product': data['data'] != null ? Product.fromJson(data['data']) : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Gagal menyesuaikan stok',
+        };
+      }
     } catch (e) {
       debugPrint('GudangService adjustStock error: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'Koneksi ke server bermasalah: $e',
+      };
     }
   }
 

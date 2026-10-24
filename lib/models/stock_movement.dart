@@ -4,6 +4,8 @@ class StockMovement {
   final int? userId;
   final String type; // 'IN', 'OUT', 'ADJUST'
   final int quantityDelta;
+  final int? supplierId;
+  final String? referenceNo;
   final String? note;
   final int? createdAtEpochMs;
 
@@ -11,6 +13,8 @@ class StockMovement {
     required this.id,
     required this.productId,
     this.userId,
+    this.supplierId,
+    this.referenceNo,
     required this.type,
     required this.quantityDelta,
     this.note,
@@ -26,6 +30,10 @@ class StockMovement {
       userId: json['userId'] is int
           ? json['userId']
           : int.tryParse(json['user_id']?.toString() ?? json['userId']?.toString() ?? ''),
+      supplierId: json['supplierId'] is int
+          ? json['supplierId']
+          : int.tryParse(json['supplier_id']?.toString() ?? json['supplierId']?.toString() ?? ''),
+      referenceNo: json['reference_no']?.toString() ?? json['referenceNo']?.toString(),
       type: json['type']?.toString().toUpperCase() ?? 'IN',
       quantityDelta: json['quantityDelta'] is int
           ? json['quantityDelta']
@@ -42,6 +50,8 @@ class StockMovement {
       'id': id,
       'productId': productId,
       'userId': userId,
+      'supplier_id': supplierId,
+      'reference_no': referenceNo,
       'type': type,
       'quantityDelta': quantityDelta,
       'note': note,

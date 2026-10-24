@@ -5,8 +5,10 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/product_image_widget.dart';
 import '../../../models/product.dart';
+import '../../../models/supplier.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/gudang_service.dart';
+import '../../../services/supplier_service.dart';
 import '../../../services/supabase_service.dart';
 
 class ProductFormDialog extends StatefulWidget {
@@ -52,6 +54,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   bool _isSaving = false;
   List<String> _categorySuggestions = [];
 
+  // ── FITUR SUPPLIER / REKANAN PEMASOK ──
+  int? _selectedSupplierId;
+  List<Supplier> _suppliers = [];
+  bool _isLoadingSuppliers = true;
+
   // ── FITUR CHECKBOX: OPSI BARANG & STATUS POS ──
   bool _showInPos = true;
   bool _isTaxable = false;
@@ -77,6 +84,23 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _showInPos = true;
 
     _fetchCategories();
+    _fetchSuppliers();
+  }
+
+  Future<void> _fetchSuppliers() async {
+    try {
+      final list = await SupplierService().getSuppliers();
+      if (mounted) {
+        setState(() {
+          _suppliers = list;
+          _isLoadingSuppliers = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingSuppliers = false);
+      }
+    }
   }
 
   @override
@@ -389,6 +413,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         : await _gudangService.storeProduct(
             productData,
             userId: currentUserId,
+            supplierId: _selectedSupplierId,
             imageUrl: uploadedSupabaseUrl,
             imageBase64: uploadedSupabaseUrl == null ? _pickedImageBase64 : null,
           );
@@ -595,7 +620,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     ),
                   ],
                 ),
-                // ── JUMLAH STOK AWAL (HANYA SAAT TAMBAH BARANG BARU) ──
+                // ── JUMLAH STOK AWAL & SUPPLIER (HANYA SAAT TAMBAH BARANG BARU) ──
                 if (!_isEdit) ...[
                   const SizedBox(height: 14),
                   TextFormField(
@@ -615,6 +640,43 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                         return 'Isi stok awal (min 0)';
                       }
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  // ── SUPPLIER / REKANAN PEMASOK ──
+                  DropdownButtonFormField<int?>(
+                    initialValue: _selectedSupplierId,
+                    isExpanded: true,
+                    style: const TextStyle(fontSize: 13.5, color: Color(0xFF1F2937)),
+                    decoration: InputDecoration(
+                      labelText: 'Supplier / Rekanan Pemasok (Opsional)',
+                      hintText: 'Pilih supplier pemasok barang...',
+                      prefixIcon: const Icon(Icons.local_shipping_outlined, color: Color(0xFFE65100), size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text(
+                          '-- Tanpa Supplier / Sumber Lain --',
+                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                        ),
+                      ),
+                      if (!_isLoadingSuppliers)
+                        ..._suppliers.map(
+                          (s) => DropdownMenuItem<int?>(
+                            value: s.id,
+                            child: Text(
+                              s.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                    ],
+                    onChanged: (val) {
+                      setState(() => _selectedSupplierId = val);
                     },
                   ),
                 ],

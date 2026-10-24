@@ -385,6 +385,13 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                                     color: const Color(0xFF5D4037),
                                     onTap: () => widget.onNavigateTab?.call(2),
                                   ),
+                                  const SizedBox(width: 6),
+                                  _buildQuickActionBtn(
+                                    title: 'Supplier',
+                                    icon: Icons.local_shipping_rounded,
+                                    color: const Color(0xFF7C3AED),
+                                    onTap: () => widget.onNavigateTab?.call(4),
+                                  ),
                                 ],
                               ),
                             ],

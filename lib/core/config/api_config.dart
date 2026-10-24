@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// untuk seluruh modul aplikasi (Auth, POS, Gudang, Admin, Owner).
 class ApiConfig {
   /// Alamat IP Server Backend (dapat diubah langsung di baris ini)
-  static const String defaultServerIp = '10.171.5.101';
+  static const String defaultServerIp = '192.168.18.38';
 
   /// Port Server Backend Laravel (default: 8000)
   static const String defaultServerPort = '8000';
@@ -37,6 +37,12 @@ class ApiConfig {
 
   /// Endpoint Modul Owner
   static String get ownerUrl => '$apiBaseUrl/owner';
+
+  /// Endpoint Modul Member / Anggota
+  static String get membersUrl => '$apiBaseUrl/members';
+
+  /// Endpoint Modul Supplier & Vendor
+  static String get suppliersUrl => '$apiBaseUrl/suppliers';
 
   /// Inisialisasi konfigurasi saat aplikasi dimulai
   static Future<void> init() async {
