@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import '../core/services/api_http.dart' as http;
 import '../core/config/api_config.dart';
 import '../models/product.dart';
 import '../models/qris_response.dart';
@@ -30,7 +30,7 @@ class PosService {
   /// Ambil daftar produk aktif dari database
   Future<List<Product>> getProducts({String? search}) async {
     try {
-      final uri = Uri.parse('$baseUrl/products').replace(
+      final uri = Uri.parse('${ApiConfig.posUrl}/products').replace(
         queryParameters: search != null && search.isNotEmpty ? {'search': search} : null,
       );
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -57,7 +57,7 @@ class PosService {
       if (cashierId != null) queryParams['cashierId'] = cashierId.toString();
       if (date != null && date.isNotEmpty) queryParams['date'] = date;
 
-      final uri = Uri.parse('$baseUrl/sales').replace(
+      final uri = Uri.parse('${ApiConfig.posUrl}/sales').replace(
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -80,6 +80,49 @@ class PosService {
     }
   }
 
+  /// Preview kalkulasi belanja POS (diskon member, promo, poin, pajak)
+  Future<Map<String, dynamic>?> calculateOrder({
+    List<Map<String, dynamic>>? items,
+    int? amount,
+    String? promoCode,
+    int? memberId,
+    bool redeemPoints = false,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.posUrl}/calculate');
+      final body = <String, dynamic>{};
+
+      if (items != null && items.isNotEmpty) {
+        body['items'] = items;
+        if (promoCode != null && promoCode.isNotEmpty) {
+          body['promoCode'] = promoCode;
+        }
+      } else if (amount != null && amount > 0) {
+        body['amount'] = amount;
+      }
+      if (memberId != null) body['member_id'] = memberId;
+      if (redeemPoints) body['redeem_points'] = true;
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error calculateOrder: $e');
+      return null;
+    }
+  }
+
   /// Checkout pembayaran Tunai (Cash)
   Future<Map<String, dynamic>> checkoutTunai({
     List<Map<String, dynamic>>? items,
@@ -87,9 +130,11 @@ class PosService {
     int? amountPaid,
     int? cashierId,
     String? promoCode,
+    int? memberId,
+    bool redeemPoints = false,
   }) async {
     try {
-      final uri = Uri.parse('$baseUrl/checkout');
+      final uri = Uri.parse('${ApiConfig.posUrl}/checkout');
       final body = <String, dynamic>{
         'cashierId': cashierId ?? AuthService().currentUser?.id ?? 1,
       };
@@ -101,6 +146,8 @@ class PosService {
         body['amount'] = amount;
       }
       if (amountPaid != null) body['amountPaid'] = amountPaid;
+      if (memberId != null) body['member_id'] = memberId;
+      if (redeemPoints) body['redeem_points'] = true;
 
       final response = await http.post(
         uri,
@@ -129,9 +176,11 @@ class PosService {
     int? amount,
     String? promoCode,
     int? cashierId,
+    int? memberId,
+    bool redeemPoints = false,
   }) async {
     try {
-      final uri = Uri.parse('$baseUrl/qris/generate');
+      final uri = Uri.parse('${ApiConfig.posUrl}/qris/generate');
       final body = <String, dynamic>{
         'cashierId': cashierId ?? AuthService().currentUser?.id ?? 1,
       };
@@ -146,6 +195,8 @@ class PosService {
       } else {
         throw Exception('Nominal atau daftar barang harus diisi.');
       }
+      if (memberId != null) body['member_id'] = memberId;
+      if (redeemPoints) body['redeem_points'] = true;
 
       final response = await http.post(
         uri,
@@ -178,7 +229,7 @@ class PosService {
   /// Polling status pembayaran QRIS ke Laravel
   Future<QrisStatusResult> checkQrisStatus(String orderId) async {
     try {
-      final uri = Uri.parse('$baseUrl/qris/check-status/$orderId');
+      final uri = Uri.parse('${ApiConfig.posUrl}/qris/check-status/$orderId');
       final response = await http.get(
         uri,
         headers: {'Accept': 'application/json'},
@@ -199,7 +250,7 @@ class PosService {
   /// Batalkan transaksi QRIS di Midtrans
   Future<bool> cancelQris(String orderId) async {
     try {
-      final uri = Uri.parse('$baseUrl/qris/cancel/$orderId');
+      final uri = Uri.parse('${ApiConfig.posUrl}/qris/cancel/$orderId');
       final response = await http.post(
         uri,
         headers: {'Accept': 'application/json'},
@@ -216,7 +267,7 @@ class PosService {
   /// Simulasi Bayar Cepat (Sandbox) langsung dari HP
   Future<QrisStatusResult> simulatePayment(String orderId) async {
     try {
-      final uri = Uri.parse('$baseUrl/qris/simulate/$orderId');
+      final uri = Uri.parse('${ApiConfig.posUrl}/qris/simulate/$orderId');
       final response = await http.post(
         uri,
         headers: {'Accept': 'application/json'},
@@ -245,7 +296,7 @@ class PosService {
       final queryParams = <String, String>{};
       if (cashierId != null) queryParams['cashierId'] = cashierId.toString();
 
-      final uri = Uri.parse('$baseUrl/closing-summary').replace(
+      final uri = Uri.parse('${ApiConfig.posUrl}/closing-summary').replace(
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
       final response = await http.get(
@@ -273,7 +324,7 @@ class PosService {
     String notes = '',
   }) async {
     try {
-      final uri = Uri.parse('$baseUrl/close-shift');
+      final uri = Uri.parse('${ApiConfig.posUrl}/close-shift');
       final bodyMap = <String, dynamic>{
         'actualCash': actualCash,
         'notes': notes,

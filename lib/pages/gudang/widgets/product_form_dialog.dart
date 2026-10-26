@@ -54,16 +54,16 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   bool _isSaving = false;
   List<String> _categorySuggestions = [];
 
-  // ── FITUR SUPPLIER / REKANAN PEMASOK ──
+  // â”€â”€ FITUR SUPPLIER / REKANAN PEMASOK â”€â”€
   int? _selectedSupplierId;
   List<Supplier> _suppliers = [];
   bool _isLoadingSuppliers = true;
 
-  // ── FITUR CHECKBOX: OPSI BARANG & STATUS POS ──
+  // â”€â”€ FITUR CHECKBOX: OPSI BARANG & STATUS POS â”€â”€
   bool _showInPos = true;
   bool _isTaxable = false;
 
-  // ── MANAJEMEN FOTO BARANG ──────────────────────────────────────
+  // â”€â”€ MANAJEMEN FOTO BARANG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   final ImagePicker _picker = ImagePicker();
   Uint8List? _pickedImageBytes;
   String? _pickedImageBase64;
@@ -366,7 +366,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       imagePath: widget.product?.imagePath,
     );
 
-    // ── FITUR SUPABASE STORAGE (BOBOT 7% UTS) ────────────────────────
+    // â”€â”€ FITUR SUPABASE STORAGE (BOBOT 7% UTS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     String? uploadedSupabaseUrl;
     if (_pickedImageBytes != null && SupabaseService.isConfigured) {
       try {
@@ -458,7 +458,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── HEADER DIALOG ──────────────────────────────────────
+                // â”€â”€ HEADER DIALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Row(
                   children: [
                     Container(
@@ -499,10 +499,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 const Divider(height: 1),
                 const SizedBox(height: 16),
 
-                // ── UPLOAD FOTO PRODUK ─────────────────────────────────
+                // â”€â”€ UPLOAD FOTO PRODUK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 _buildImagePickerSection(),
 
-                // ── INPUT BARCODE DENGAN SCANNER KAMERA ─────────────────
+                // â”€â”€ INPUT BARCODE DENGAN SCANNER KAMERA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 TextFormField(
                   controller: _barcodeCtrl,
                   decoration: InputDecoration(
@@ -522,7 +522,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── INPUT NAMA BARANG ──────────────────────────────────
+                // â”€â”€ INPUT NAMA BARANG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 TextFormField(
                   controller: _nameCtrl,
                   textCapitalization: TextCapitalization.words,
@@ -545,7 +545,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── INPUT KATEGORI ─────────────────────────────────────
+                // â”€â”€ INPUT KATEGORI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Autocomplete<String>(
                   initialValue: TextEditingValue(text: _categoryCtrl.text),
                   optionsBuilder: (textEditingValue) {
@@ -578,7 +578,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── HARGA JUAL & HARGA BELI / MODAL ────────────────────
+                // â”€â”€ HARGA JUAL & HARGA BELI / MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Row(
                   children: [
                     Expanded(
@@ -620,7 +620,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     ),
                   ],
                 ),
-                // ── JUMLAH STOK AWAL & SUPPLIER (HANYA SAAT TAMBAH BARANG BARU) ──
+                // â”€â”€ JUMLAH STOK AWAL & SUPPLIER (HANYA SAAT TAMBAH BARANG BARU) â”€â”€
                 if (!_isEdit) ...[
                   const SizedBox(height: 14),
                   TextFormField(
@@ -643,26 +643,26 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     },
                   ),
                   const SizedBox(height: 14),
-                  // ── SUPPLIER / REKANAN PEMASOK ──
+                  // â”€â”€ SUPPLIER / REKANAN PEMASOK â”€â”€
                   DropdownButtonFormField<int?>(
                     initialValue: _selectedSupplierId,
                     isExpanded: true,
                     style: const TextStyle(fontSize: 13.5, color: Color(0xFF1F2937)),
                     decoration: InputDecoration(
-                      labelText: 'Supplier / Rekanan Pemasok (Opsional)',
+                      labelText: 'Supplier / Rekanan Pemasok *',
                       hintText: 'Pilih supplier pemasok barang...',
                       prefixIcon: const Icon(Icons.local_shipping_outlined, color: Color(0xFFE65100), size: 20),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
+                    validator: (val) {
+                      if (val == null) {
+                        return 'Supplier wajib dipilih';
+                      }
+                      return null;
+                    },
                     items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text(
-                          '-- Tanpa Supplier / Sumber Lain --',
-                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
-                        ),
-                      ),
+
                       if (!_isLoadingSuppliers)
                         ..._suppliers.map(
                           (s) => DropdownMenuItem<int?>(
@@ -683,7 +683,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
                 const SizedBox(height: 14),
 
-                // ── FITUR CHECKBOX: PENGATURAN STATUS & PAJAK BARANG ──
+                // â”€â”€ FITUR CHECKBOX: PENGATURAN STATUS & PAJAK BARANG â”€â”€
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
@@ -733,7 +733,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
                 const SizedBox(height: 20),
 
-                // ── ACTION BUTTONS ─────────────────────────────────────
+                // â”€â”€ ACTION BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

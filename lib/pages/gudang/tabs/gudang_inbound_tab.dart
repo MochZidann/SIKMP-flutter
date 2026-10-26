@@ -16,6 +16,7 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
   final GudangService _gudangService = GudangService();
   List<StockMovement> _movements = [];
   bool _isLoading = true;
+  String? _loadError;
   String _selectedType = 'ALL'; // 'ALL', 'IN', 'ADJUST', 'OUT'
 
   @override
@@ -25,13 +26,14 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
   }
 
   Future<void> _loadMovements() async {
-    setState(() => _isLoading = true);
-    final moves = await _gudangService.getStockMovements();
-    if (mounted) {
-      setState(() {
-        _movements = moves;
-        _isLoading = false;
-      });
+    setState(() { _isLoading = true; _loadError = null; });
+    try {
+      final moves = await _gudangService.getStockMovements();
+      if (mounted) setState(() => _movements = moves);
+    } catch (e) {
+      if (mounted) setState(() => _loadError = 'Riwayat gagal dimuat. Periksa koneksi atau login kembali.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -94,7 +96,9 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
                     itemCount: 6,
                     itemBuilder: (_, _) => const SkeletonTransactionTile(),
                   )
-                : _filteredMovements.isEmpty
+                : _loadError != null
+                    ? EmptyDataView(icon: Icons.cloud_off, title: 'Gagal memuat riwayat', subtitle: _loadError!, actionLabel: 'Coba Lagi', onAction: _loadMovements)
+                    : _filteredMovements.isEmpty
                     ? EmptyDataView(
                         icon: Icons.swap_vert_rounded,
                         title: 'Riwayat Mutasi Kosong',

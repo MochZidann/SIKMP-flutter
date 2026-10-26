@@ -76,7 +76,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
 
     final qty = int.tryParse(_qtyController.text.trim());
     if (qty == null || qty <= 0) {
@@ -177,7 +177,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Barang Keluar / Retur',
+                              'Barang Keluar',
                               style: TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.bold,
@@ -225,7 +225,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
 
                   // ── SUPPLIER TUJUAN RETUR (OPSIONAL) ──────────────────
                   const Text(
-                    'Supplier Tujuan Retur (Opsional)',
+                    'Supplier terkait (opsional)',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -256,7 +256,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                       const DropdownMenuItem<int?>(
                         value: null,
                         child: Text(
-                          '-- Tanpa Supplier / Retur Umum --',
+                          '-- Tanpa Supplier --',
                           style: TextStyle(color: Color(0xFF6B7280), fontSize: 13.5),
                         ),
                       ),
@@ -350,7 +350,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'No. Surat Retur / Dokumen',
+                            'No. Dokumen',
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
@@ -412,7 +412,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                         color: Color(0xFF4B5563),
                       ),
                       children: [
-                        TextSpan(text: 'Alasan Retur / Catatan '),
+                        TextSpan(text: 'Alasan barang keluar / Catatan '),
                         TextSpan(
                           text: '*',
                           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
@@ -425,7 +425,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                     controller: _noteController,
                     maxLines: 2,
                     decoration: InputDecoration(
-                      hintText: 'Contoh: Barang cacat kemasan, expired, atau retur...',
+                      hintText: 'Contoh: Catatan barang keluar...',
                       hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF9CA3AF)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       border: OutlineInputBorder(

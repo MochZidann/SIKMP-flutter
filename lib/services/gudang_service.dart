@@ -1,6 +1,6 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import '../core/services/api_http.dart' as http;
 import '../core/config/api_config.dart';
 import '../models/product.dart';
 import '../models/stock_movement.dart';
@@ -18,7 +18,7 @@ class GudangService {
 
   String get gudangBaseUrl => ApiConfig.gudangUrl;
 
-  // ── PRODUK (PRODUCT CRUD) ─────────────────────────────────────
+  // â”€â”€ PRODUK (PRODUCT CRUD) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Mengambil daftar produk gudang dengan opsi pencarian & filter stok
   Future<List<Product>> getProducts({String? search, String? status}) async {
@@ -40,10 +40,10 @@ class GudangService {
         }
       }
       // Fallback ke PosService jika endpoint gudang belum sinkron
-      return _posService.getProducts(search: search);
+      return await _posService.getProducts(search: search);
     } catch (e) {
       debugPrint('GudangService getProducts error: $e');
-      return _posService.getProducts(search: search);
+      return await _posService.getProducts(search: search);
     }
   }
 
@@ -123,7 +123,6 @@ class GudangService {
         'category': product.category?.trim() ?? 'Umum',
         'price': product.price,
         'purchase_price': product.purchasePrice,
-        'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
         if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
@@ -192,27 +191,25 @@ class GudangService {
     }
   }
 
-  // ── MUTASI & STOK ─────────────────────────────────────────────
+  // â”€â”€ MUTASI & STOK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Mengambil riwayat mutasi / pergerakan stok
   Future<List<StockMovement>> getStockMovements() async {
-    try {
-      final uri = Uri.parse('$syncBaseUrl/stock-movements');
+    final result = <StockMovement>[];
+    var cursor = 0;
+    while (true) {
+      final uri = Uri.parse('$syncBaseUrl/stock-movements').replace(queryParameters: {'after_id': '$cursor', 'limit': '200'});
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final dynamic data = json.decode(response.body);
-        if (data is List) {
-          final movements = data.map((item) => StockMovement.fromJson(item)).toList();
-          movements.sort((a, b) => (b.createdAtEpochMs ?? 0).compareTo(a.createdAtEpochMs ?? 0));
-          return movements;
-        }
-      }
-      return [];
-    } catch (e) {
-      debugPrint('GudangService getStockMovements error: $e');
-      return [];
+      if (response.statusCode != 200) throw Exception('Riwayat stok gagal dimuat. Silakan coba kembali.');
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      result.addAll((data['data'] as List).map((item) => StockMovement.fromJson(item)));
+      if (data['has_more'] != true) break;
+      final next = data['next_cursor'] as int;
+      if (next <= cursor) throw Exception('Cursor riwayat stok tidak valid.');
+      cursor = next;
     }
+    result.sort((a, b) => b.id.compareTo(a.id));
+    return result;
   }
 
   /// Mencatat barang masuk (Stock In / Pasokan) dan menambah stok produk
@@ -222,6 +219,7 @@ class GudangService {
     int? supplierId,
     String? referenceNo,
     String? note,
+    String? expiredDate,
   }) async {
     try {
       final currentUserId = AuthService().currentUser?.id ?? 1;
@@ -231,6 +229,7 @@ class GudangService {
         'supplier_id': ?supplierId,
         if (referenceNo != null && referenceNo.trim().isNotEmpty) 'reference_no': referenceNo.trim(),
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        if (expiredDate != null && expiredDate.trim().isNotEmpty) 'expired_date': expiredDate.trim(),
         'user_id': currentUserId,
       };
 
@@ -320,6 +319,7 @@ class GudangService {
       final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-adjust');
       final payload = <String, dynamic>{
         'new_stock': newStock,
+        'expected_stock': product.stock,
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
         'user_id': currentUserId,
       };
@@ -459,3 +459,4 @@ class GudangService {
     }
   }
 }
+

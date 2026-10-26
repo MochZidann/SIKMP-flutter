@@ -8,6 +8,8 @@ class CashPaymentBottomSheet extends StatefulWidget {
   final List<Map<String, dynamic>>? itemsPayload;
   final Function(Map<String, dynamic> receiptData) onSuccess;
   final Function(String message) onError;
+  final int? memberId;
+  final bool redeemPoints;
 
   const CashPaymentBottomSheet({
     super.key,
@@ -15,6 +17,8 @@ class CashPaymentBottomSheet extends StatefulWidget {
     required this.itemsPayload,
     required this.onSuccess,
     required this.onError,
+    this.memberId,
+    this.redeemPoints = false,
   });
 
   static Future<void> show(
@@ -23,6 +27,8 @@ class CashPaymentBottomSheet extends StatefulWidget {
     required List<Map<String, dynamic>>? itemsPayload,
     required Function(Map<String, dynamic> receiptData) onSuccess,
     required Function(String message) onError,
+    int? memberId,
+    bool redeemPoints = false,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -33,6 +39,8 @@ class CashPaymentBottomSheet extends StatefulWidget {
         itemsPayload: itemsPayload,
         onSuccess: onSuccess,
         onError: onError,
+        memberId: memberId,
+        redeemPoints: redeemPoints,
       ),
     );
   }
@@ -79,25 +87,47 @@ class _CashPaymentBottomSheetState extends State<CashPaymentBottomSheet> {
 
   Future<void> _processCheckout() async {
     setState(() => _isProcessing = true);
-    final change = _cashReceived - widget.finalAmount;
 
     try {
       final result = await PosService().checkoutTunai(
         items: widget.itemsPayload,
         amount: widget.itemsPayload == null ? widget.finalAmount : null,
         amountPaid: _cashReceived,
+        memberId: widget.memberId,
+        redeemPoints: widget.redeemPoints,
       );
 
       if (mounted) {
         setState(() => _isProcessing = false);
         Navigator.pop(context);
+
+        final serverTotal = (result['total'] is num)
+            ? (result['total'] as num).toInt()
+            : widget.finalAmount;
+        final serverAmountPaid = (result['amountPaid'] is num)
+            ? (result['amountPaid'] as num).toInt()
+            : _cashReceived;
+        final serverChange = (result['change'] is num)
+            ? (result['change'] as num).toInt()
+            : (serverAmountPaid - serverTotal);
+
         final receiptData = {
           'transactionId': result['transactionId'] ?? 'TRX-CASH',
-          'total': widget.finalAmount,
+          'total': serverTotal,
           'paymentMethod': 'TUNAI',
-          'amountPaid': _cashReceived,
-          'change': change,
+          'amountPaid': serverAmountPaid,
+          'change': serverChange,
           'items': result['items'] ?? widget.itemsPayload ?? [],
+          'memberId': result['memberId'],
+          'memberNo': result['memberNo'],
+          'memberName': result['memberName'],
+          'memberDiscount': result['memberDiscount'] ?? 0,
+          'pointsEarned': result['pointsEarned'] ?? 0,
+          'pointsRedeemed': result['pointsRedeemed'] ?? 0,
+          'pointsDiscount': result['pointsDiscount'] ?? 0,
+          'tax': result['tax'] ?? 0,
+          'globalDiscount': result['globalDiscount'] ?? 0,
+          'promoDiscount': result['promoDiscount'] ?? 0,
         };
         widget.onSuccess(receiptData);
       }
@@ -262,7 +292,7 @@ class _CashPaymentBottomSheetState extends State<CashPaymentBottomSheet> {
                 return ChoiceChip(
                   showCheckmark: false,
                   label: Text(
-                    isExact ? 'Uang Pas (${formatRupiah(amt)})' : formatRupiah(amt),
+                    isExact ? 'Uang Pas ()' : formatRupiah(amt),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,

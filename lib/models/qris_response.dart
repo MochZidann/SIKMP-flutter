@@ -1,4 +1,4 @@
-class QrisResponse {
+﻿class QrisResponse {
   final bool success;
   final String orderId;
   final int grossAmount;
@@ -7,6 +7,13 @@ class QrisResponse {
   final String? expiryTime;
   final bool isSandbox;
   final String? message;
+  final int? memberId;
+  final String? memberNo;
+  final String? customerName;
+  final int pointsEarned;
+  final int pointsRedeemed;
+  final int pointsDiscount;
+  final int memberDiscount;
 
   QrisResponse({
     required this.success,
@@ -17,6 +24,13 @@ class QrisResponse {
     this.expiryTime,
     this.isSandbox = true,
     this.message,
+    this.memberId,
+    this.memberNo,
+    this.customerName,
+    this.pointsEarned = 0,
+    this.pointsRedeemed = 0,
+    this.pointsDiscount = 0,
+    this.memberDiscount = 0,
   });
 
   factory QrisResponse.fromJson(Map<String, dynamic> json) {
@@ -31,6 +45,23 @@ class QrisResponse {
       expiryTime: json['expiry_time']?.toString(),
       isSandbox: json['is_sandbox'] == true,
       message: json['message']?.toString(),
+      memberId: json['member_id'] is int
+          ? json['member_id']
+          : int.tryParse(json['member_id']?.toString() ?? ''),
+      memberNo: json['member_no']?.toString(),
+      customerName: json['customer_name']?.toString(),
+      pointsEarned: json['points_earned'] is int
+          ? json['points_earned']
+          : (int.tryParse(json['points_earned']?.toString() ?? '0') ?? 0),
+      pointsRedeemed: json['points_redeemed'] is int
+          ? json['points_redeemed']
+          : (int.tryParse(json['points_redeemed']?.toString() ?? '0') ?? 0),
+      pointsDiscount: json['points_discount'] is int
+          ? json['points_discount']
+          : (int.tryParse(json['points_discount']?.toString() ?? '0') ?? 0),
+      memberDiscount: json['member_discount'] is int
+          ? json['member_discount']
+          : (int.tryParse(json['member_discount']?.toString() ?? '0') ?? 0),
     );
   }
 }

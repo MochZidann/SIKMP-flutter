@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
 
 class PosReceiptDialog extends StatelessWidget {
@@ -34,6 +34,13 @@ class PosReceiptDialog extends StatelessWidget {
     final paymentMethod = data['paymentMethod'] ?? 'QRIS';
     final amountPaid = data['amountPaid'] ?? total;
     final change = data['change'] ?? 0;
+
+    final memberName = data['memberName'] ?? data['customer_name'];
+    final memberNo = data['memberNo'] ?? data['member_no'];
+    final memberDiscount = data['memberDiscount'] ?? data['member_discount'] ?? 0;
+    final pointsRedeemed = data['pointsRedeemed'] ?? data['points_redeemed'] ?? 0;
+    final pointsDiscount = data['pointsDiscount'] ?? data['points_discount'] ?? 0;
+    final pointsEarned = data['pointsEarned'] ?? data['points_earned'] ?? 0;
 
     return AlertDialog(
       backgroundColor: Colors.white,
@@ -92,6 +99,15 @@ class PosReceiptDialog extends StatelessWidget {
                   'Metode Bayar',
                   paymentMethod == 'TUNAI' ? 'Tunai (Cash)' : 'QRIS Dynamic',
                 ),
+                if (memberName != null && memberName.toString().isNotEmpty) ...[
+                  const Divider(height: 14),
+                  _buildReceiptRow(
+                    'Anggota / Member',
+                    '$memberName ${memberNo != null ? "($memberNo)" : ""}',
+                    color: const Color(0xFF1565C0),
+                    isBold: true,
+                  ),
+                ],
                 const Divider(height: 14),
                 if (items.isNotEmpty) ...[
                   Align(
@@ -137,6 +153,22 @@ class PosReceiptDialog extends StatelessWidget {
                     ),
                   const Divider(height: 14),
                 ],
+                if (memberDiscount > 0) ...[
+                  _buildReceiptRow(
+                    'Diskon Member',
+                    '- ${formatRupiah(memberDiscount)}',
+                    color: const Color(0xFF2E7D32),
+                  ),
+                  const Divider(height: 14),
+                ],
+                if (pointsDiscount > 0 || pointsRedeemed > 0) ...[
+                  _buildReceiptRow(
+                    'Poin Ditukarkan',
+                    '- ${formatRupiah(pointsDiscount > 0 ? pointsDiscount : pointsRedeemed)} ($pointsRedeemed pt)',
+                    color: const Color(0xFF2E7D32),
+                  ),
+                  const Divider(height: 14),
+                ],
                 _buildReceiptRow(
                   'Total Tagihan',
                   formatRupiah(total),
@@ -153,6 +185,15 @@ class PosReceiptDialog extends StatelessWidget {
                   _buildReceiptRow(
                     'Kembalian',
                     formatRupiah(change),
+                    isBold: true,
+                    color: const Color(0xFF2E7D32),
+                  ),
+                ],
+                if (pointsEarned > 0) ...[
+                  const Divider(height: 14),
+                  _buildReceiptRow(
+                    'Poin Diperoleh (1%)',
+                    '+ $pointsEarned Poin',
                     isBold: true,
                     color: const Color(0xFF2E7D32),
                   ),

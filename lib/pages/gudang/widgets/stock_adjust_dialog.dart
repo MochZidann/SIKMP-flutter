@@ -52,7 +52,11 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
+    if (_noteController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alasan penyesuaian stok wajib diisi.')));
+      return;
+    }
 
     final newStock = int.tryParse(_stockController.text.trim());
     if (newStock == null || newStock < 0) {
@@ -260,7 +264,7 @@ class _StockAdjustDialogState extends State<StockAdjustDialog> {
 
                   // ── CATATAN / ALASAN PENYESUAIAN (OPSIONAL) ────────────
                   const Text(
-                    'Catatan / Alasan Penyesuaian (Opsional)',
+                    'Catatan / Alasan Penyesuaian (Wajib)',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,

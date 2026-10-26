@@ -135,8 +135,8 @@ class StockItemCard extends StatelessWidget {
                   ),
                   child: const Icon(Icons.remove_shopping_cart_rounded, color: Color(0xFFE11D48), size: 20),
                 ),
-                title: const Text('Barang Keluar / Retur', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: const Text('Catat barang keluar, retur supplier, atau rusak', style: TextStyle(fontSize: 11.5)),
+                title: const Text('Barang Keluar', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                subtitle: const Text('Untuk retur supplier, gunakan menu Retur Pembelian', style: TextStyle(fontSize: 11.5)),
                 onTap: () {
                   Navigator.pop(ctx);
                   onStockOut();

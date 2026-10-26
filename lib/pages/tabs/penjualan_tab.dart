@@ -1,3 +1,4 @@
+﻿import '../pos/widgets/pos_return_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -31,11 +32,11 @@ class PenjualanTabState extends State<PenjualanTab> {
     await _loadSales();
   }
 
-  // ── FITUR DATEPICKER & TIMEPICKER ──
+  // â”€â”€ FITUR DATEPICKER & TIMEPICKER â”€â”€
   DateTime? _selectedFilterDate;
   TimeOfDay? _selectedFilterTime;
 
-  // ── FITUR CONTEXTMENU (POSISI TAP) ──
+  // â”€â”€ FITUR CONTEXTMENU (POSISI TAP) â”€â”€
   Offset? _lastTapDownPosition;
 
   @override
@@ -78,7 +79,7 @@ class PenjualanTabState extends State<PenjualanTab> {
     }
   }
 
-  /// ── FITUR DATEPICKER & TIMEPICKER DALAM 1 ALUR ──────────────────
+  /// â”€â”€ FITUR DATEPICKER & TIMEPICKER DALAM 1 ALUR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _pickDateTimeFilterCombined() async {
     // 1. Munculkan showDatePicker() terlebih dahulu
     final pickedDate = await showDatePicker(
@@ -112,7 +113,7 @@ class PenjualanTabState extends State<PenjualanTab> {
     _loadSales();
   }
 
-  /// ── FITUR DATEPICKER DIALOG ──────────────────────────────────────
+  /// â”€â”€ FITUR DATEPICKER DIALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _pickDateFilter() async {
     final picked = await showDatePicker(
       context: context,
@@ -133,7 +134,7 @@ class PenjualanTabState extends State<PenjualanTab> {
     }
   }
 
-  /// ── FITUR TIMEPICKER DIALOG ──────────────────────────────────────
+  /// â”€â”€ FITUR TIMEPICKER DIALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _pickTimeFilter() async {
     final picked = await showTimePicker(
       context: context,
@@ -160,7 +161,7 @@ class PenjualanTabState extends State<PenjualanTab> {
     _loadSales();
   }
 
-  /// ── FITUR CONTEXTMENU (showMenu pada onLongPress) ─────────────────
+  /// â”€â”€ FITUR CONTEXTMENU (showMenu pada onLongPress) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _showTransactionContextMenu(
     Offset tapPosition,
     SaleRecord sale,
@@ -211,7 +212,13 @@ class PenjualanTabState extends State<PenjualanTab> {
     );
 
     if (!mounted || selected == null) return;
-    if (selected == 'detail') {
+    if (selected == 'return') {
+      PosReturnDialog.show(
+        context,
+        sale: sale,
+        onReturnSuccess: _loadSales,
+      );
+    } else if (selected == 'detail') {
       _showSaleDetailModal(sale);
     } else if (selected == 'copy') {
       await Clipboard.setData(ClipboardData(text: sale.transactionId));
@@ -468,7 +475,7 @@ class PenjualanTabState extends State<PenjualanTab> {
         foregroundColor: Colors.white,
         title: const AppTopBarTitle(roleName: 'Kasir'),
         actions: [
-          // ── MENU FILTER TANGGAL & WAKTU DI NAVBAR KANAN ATAS ──
+          // â”€â”€ MENU FILTER TANGGAL & WAKTU DI NAVBAR KANAN ATAS â”€â”€
           PopupMenuButton<String>(
             tooltip: 'Filter Tanggal & Jam Penjualan',
             icon: Stack(
@@ -631,7 +638,7 @@ class PenjualanTabState extends State<PenjualanTab> {
       ),
       body: Column(
         children: [
-          // ── BANNER INDIKATOR FILTER AKTIF DARI NAVBAR ──
+          // â”€â”€ BANNER INDIKATOR FILTER AKTIF DARI NAVBAR â”€â”€
           if (_selectedFilterDate != null || _selectedFilterTime != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -649,7 +656,7 @@ class PenjualanTabState extends State<PenjualanTab> {
                     child: Text(
                       'Filter Aktif: '
                       '${_selectedFilterDate != null ? DateFormat('dd/MM/yyyy').format(_selectedFilterDate!) : ''}'
-                      '${_selectedFilterDate != null && _selectedFilterTime != null ? ' • ' : ''}'
+                      '${_selectedFilterDate != null && _selectedFilterTime != null ? ' â€¢ ' : ''}'
                       '${_selectedFilterTime != null ? 'Jam ${_selectedFilterTime!.format(context)}' : ''}',
                       style: const TextStyle(
                         fontSize: 12,
@@ -680,7 +687,7 @@ class PenjualanTabState extends State<PenjualanTab> {
               ),
             ),
 
-          // ── BAR QUICK FILTER & TOTAL TRANSAKSI ──
+          // â”€â”€ BAR QUICK FILTER & TOTAL TRANSAKSI â”€â”€
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: Colors.white,
@@ -748,7 +755,7 @@ class PenjualanTabState extends State<PenjualanTab> {
 
           const Divider(height: 1),
 
-          // ── LIST TRANSAKSI ───────────────────────────────────────────────
+          // â”€â”€ LIST TRANSAKSI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Expanded(
             child: _isLoading
                 ? ListView.builder(
@@ -811,7 +818,7 @@ class PenjualanTabState extends State<PenjualanTab> {
                                 },
                                 child: ListTile(
                                   onTap: () => _showSaleDetailModal(sale),
-                                  // ── FITUR CONTEXTMENU PADA ONLONGPRESS ──
+                                  // â”€â”€ FITUR CONTEXTMENU PADA ONLONGPRESS â”€â”€
                                   onLongPress: () {
                                     _showTransactionContextMenu(
                                       _lastTapDownPosition ??
@@ -871,7 +878,7 @@ class PenjualanTabState extends State<PenjualanTab> {
                                 children: [
                                   const SizedBox(height: 3),
                                   Text(
-                                    '$dateStr • ${sale.items.length} item • ${sale.paymentMethod}',
+                                    '$dateStr â€¢ ${sale.items.length} item â€¢ ${sale.paymentMethod}',
                                     style: TextStyle(
                                         fontSize: 11, color: Colors.grey.shade600),
                                   ),

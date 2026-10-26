@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/product.dart';
 import '../../../models/supplier.dart';
@@ -44,6 +44,7 @@ class _StockInDialogState extends State<StockInDialog> {
   List<Supplier> _suppliers = [];
   bool _isLoadingSuppliers = true;
   bool _isSubmitting = false;
+  DateTime? _selectedExpiredDate;
 
   @override
   void initState() {
@@ -76,7 +77,7 @@ class _StockInDialogState extends State<StockInDialog> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
 
     final qty = int.tryParse(_qtyController.text.trim());
     if (qty == null || qty <= 0) {
@@ -97,6 +98,7 @@ class _StockInDialogState extends State<StockInDialog> {
       supplierId: _selectedSupplierId,
       referenceNo: _refController.text.trim().isEmpty ? null : _refController.text.trim(),
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      expiredDate: _selectedExpiredDate?.toIso8601String().split('T').first,
     );
 
     if (mounted) {
@@ -144,7 +146,7 @@ class _StockInDialogState extends State<StockInDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── HEADER MODAL ─────────────────────────────────────
+                  // â”€â”€ HEADER MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -186,7 +188,7 @@ class _StockInDialogState extends State<StockInDialog> {
                                     text: widget.product.name,
                                     style: const TextStyle(fontWeight: FontWeight.w600),
                                   ),
-                                  const TextSpan(text: '  •  Stok saat ini: '),
+                                  const TextSpan(text: '  â€¢  Stok saat ini: '),
                                   TextSpan(
                                     text: '${widget.product.stock} unit',
                                     style: const TextStyle(
@@ -213,9 +215,9 @@ class _StockInDialogState extends State<StockInDialog> {
                   const Divider(height: 1, color: Color(0xFFF3F4F6)),
                   const SizedBox(height: 16),
 
-                  // ── SUPPLIER / PEMASOK (OPSIONAL) ─────────────────────
+                  // â”€â”€ SUPPLIER / PEMASOK (OPSIONAL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   const Text(
-                    'Supplier / Pemasok (Opsional)',
+                    'Supplier / Pemasok *',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -242,14 +244,14 @@ class _StockInDialogState extends State<StockInDialog> {
                         borderSide: const BorderSide(color: primaryGreen, width: 1.5),
                       ),
                     ),
+                    validator: (val) {
+                      if (val == null) {
+                        return 'Supplier wajib dipilih';
+                      }
+                      return null;
+                    },
                     items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text(
-                          '-- Tanpa Supplier / Sumber Lain --',
-                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13.5),
-                        ),
-                      ),
+
                       if (!_isLoadingSuppliers)
                         ..._suppliers.map(
                           (s) => DropdownMenuItem<int?>(
@@ -268,7 +270,7 @@ class _StockInDialogState extends State<StockInDialog> {
                   ),
                   const SizedBox(height: 14),
 
-                  // ── ROW: JUMLAH MASUK & NO. REFERENSI ─────────────────
+                  // â”€â”€ ROW: JUMLAH MASUK & NO. REFERENSI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isNarrow = constraints.maxWidth < 340;
@@ -379,7 +381,60 @@ class _StockInDialogState extends State<StockInDialog> {
                   ),
                   const SizedBox(height: 14),
 
-                  // ── CATATAN (OPSIONAL) ───────────────────────────────
+                  // â”€â”€ CATATAN (OPSIONAL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                                    // Tanggal Kedaluwarsa
+                  const Text(
+                    'Tanggal Kedaluwarsa (Opsional)',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4B5563),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedExpiredDate ?? DateTime.now().add(const Duration(days: 30)),
+                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedExpiredDate = picked);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF9CA3AF)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _selectedExpiredDate != null
+                                ? '${_selectedExpiredDate!.day.toString().padLeft(2, '0')}/${_selectedExpiredDate!.month.toString().padLeft(2, '0')}/${_selectedExpiredDate!.year}'
+                                : 'Pilih tanggal expired batch...',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: _selectedExpiredDate != null ? const Color(0xFF1F2937) : const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                          const Spacer(),
+                          if (_selectedExpiredDate != null)
+                            GestureDetector(
+                              onTap: () => setState(() => _selectedExpiredDate = null),
+                              child: const Icon(Icons.close, size: 16, color: Color(0xFF9CA3AF)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   const Text(
                     'Catatan (Opsional)',
                     style: TextStyle(
@@ -411,7 +466,7 @@ class _StockInDialogState extends State<StockInDialog> {
                   ),
                   const SizedBox(height: 22),
 
-                  // ── ACTION BUTTONS ───────────────────────────────────
+                  // â”€â”€ ACTION BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -463,3 +518,4 @@ class _StockInDialogState extends State<StockInDialog> {
     );
   }
 }
+

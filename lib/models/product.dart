@@ -1,4 +1,4 @@
-class Product {
+﻿class Product {
   final int id;
   final String name;
   final String? barcode;
@@ -9,6 +9,9 @@ class Product {
   final int purchasePrice;
   final int minimumStock;
   final String? imagePath;
+  final bool isExpired;
+  final int? sellableStock;
+  final String? expiredDate;
 
   Product({
     required this.id,
@@ -21,10 +24,13 @@ class Product {
     this.purchasePrice = 0,
     this.minimumStock = 5,
     this.imagePath,
+    this.isExpired = false,
+    this.sellableStock,
+    this.expiredDate,
   });
 
-  bool get isOutOfStock => stock <= 0;
-  bool get isLowStock => stock > 0 && stock < 5;
+  bool get isOutOfStock => (sellableStock != null ? sellableStock! <= 0 : stock <= 0) || isExpired;
+  bool get isLowStock => (sellableStock ?? stock) > 0 && (sellableStock ?? stock) < 5;
 
   Product copyWith({
     int? id,
@@ -37,6 +43,9 @@ class Product {
     int? purchasePrice,
     int? minimumStock,
     String? imagePath,
+    bool? isExpired,
+    int? sellableStock,
+    String? expiredDate,
   }) {
     return Product(
       id: id ?? this.id,
@@ -49,6 +58,9 @@ class Product {
       purchasePrice: purchasePrice ?? this.purchasePrice,
       minimumStock: minimumStock ?? this.minimumStock,
       imagePath: imagePath ?? this.imagePath,
+      isExpired: isExpired ?? this.isExpired,
+      sellableStock: sellableStock ?? this.sellableStock,
+      expiredDate: expiredDate ?? this.expiredDate,
     );
   }
 
@@ -82,6 +94,13 @@ class Product {
               ? json['minimum_stock']
               : (int.tryParse(json['minimumStock']?.toString() ?? json['minimum_stock']?.toString() ?? '5') ?? 5)),
       imagePath: json['imagePath']?.toString() ?? json['image_path']?.toString(),
+      isExpired: json['is_expired'] == true || json['isExpired'] == true,
+      sellableStock: json['sellable_stock'] is int
+          ? json['sellable_stock']
+          : (json['sellableStock'] is int
+              ? json['sellableStock']
+              : int.tryParse(json['sellable_stock']?.toString() ?? json['sellableStock']?.toString() ?? '')),
+      expiredDate: json['expired_date']?.toString() ?? json['expiredDate']?.toString(),
     );
   }
 
@@ -97,6 +116,9 @@ class Product {
       'purchasePrice': purchasePrice,
       'minimumStock': minimumStock,
       'imagePath': imagePath,
+      'is_expired': isExpired,
+      'sellable_stock': sellableStock,
+      'expired_date': expiredDate,
     };
   }
 }

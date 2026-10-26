@@ -5,8 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Mengatur alamat IP dan port server backend secara tersentralisasi
 /// untuk seluruh modul aplikasi (Auth, POS, Gudang, Admin, Owner).
 class ApiConfig {
-  /// Alamat IP Server Backend (dapat diubah langsung di baris ini)
-  static const String defaultServerIp = '192.168.18.38';
+  /// Alamat IP Server Backend (dapat diubah langsung di baris ini
+
+  static const String defaultServerIp = '127.0.0.1';
 
   /// Port Server Backend Laravel (default: 8000)
   static const String defaultServerPort = '8000';
@@ -43,6 +44,9 @@ class ApiConfig {
 
   /// Endpoint Modul Supplier & Vendor
   static String get suppliersUrl => '$apiBaseUrl/suppliers';
+
+  /// Endpoint Modul Retur (Penjualan & Pembelian)
+  static String get returnsUrl => '$apiBaseUrl/returns';
 
   /// Inisialisasi konfigurasi saat aplikasi dimulai
   static Future<void> init() async {

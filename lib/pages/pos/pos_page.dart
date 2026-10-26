@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
+import '../../models/member.dart';
 import '../../models/product.dart';
 import '../../models/qris_response.dart';
 import '../../services/pos_service.dart';
@@ -31,8 +32,11 @@ class PosPageState extends State<PosPage> {
   List<Product> _products = [];
   bool _isLoadingProducts = true;
   final Map<int, int> _cart = {}; // productId -> quantity
+  Member? _selectedMember;
+  bool _redeemPoints = false;
 
   bool _isGenerating = false;
+  Map<String, dynamic>? _serverCalc;
 
   /// Memuat ulang daftar produk dari server untuk sinkronisasi eksternal
   Future<void> reloadProducts() async {
@@ -61,6 +65,7 @@ class PosPageState extends State<PosPage> {
     setState(() {
       _cart[product.id] = (_cart[product.id] ?? 0) + 1;
     });
+    _updateServerCalculation();
   }
 
   /// Pindai & tambahkan produk ke keranjang berdasarkan kode barcode atau ID
@@ -83,6 +88,7 @@ class PosPageState extends State<PosPage> {
       setState(() {
         _cart[matched.id] = (_cart[matched.id] ?? 0) + 1;
       });
+      _updateServerCalculation();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -125,7 +131,33 @@ class PosPageState extends State<PosPage> {
     }
   }
 
+  Future<void> _updateServerCalculation() async {
+    if (_cart.isEmpty) {
+      if (mounted) setState(() => _serverCalc = null);
+      return;
+    }
+
+    final itemsPayload = _cart.entries.map((entry) => {
+      'productId': entry.key,
+      'qty': entry.value,
+    }).toList();
+
+    try {
+      final calc = await _posService.calculateOrder(
+        items: itemsPayload,
+        memberId: _selectedMember?.id,
+        redeemPoints: _redeemPoints,
+      );
+      if (mounted) {
+        setState(() => _serverCalc = calc);
+      }
+    } catch (_) {}
+  }
+
   int get _cartTotal {
+    if (_serverCalc != null && _serverCalc!['total'] is num) {
+      return (_serverCalc!['total'] as num).toInt();
+    }
     int total = 0;
     _cart.forEach((productId, qty) {
       final p = _products.firstWhere(
@@ -139,9 +171,18 @@ class PosPageState extends State<PosPage> {
           barcode: '',
         ),
       );
-      total += p.price * qty;
+      final price = (_selectedMember != null && p.memberPrice != null && p.memberPrice! > 0 && p.memberPrice! < p.price)
+          ? p.memberPrice!
+          : p.price;
+      total += price * qty;
     });
-    return total;
+
+    if (_redeemPoints && _selectedMember != null && _selectedMember!.points > 0) {
+      final discount = (_selectedMember!.points < total) ? _selectedMember!.points : total;
+      total -= discount;
+    }
+
+    return total.clamp(0, 999999999);
   }
 
   String _getProductName(dynamic productId) {
@@ -150,7 +191,7 @@ class PosPageState extends State<PosPage> {
     return p?.name ?? 'Produk #$productId';
   }
 
-  Map<String, dynamic>? _getOrderPayload() {
+  Map<String, dynamic>? _getOrderPayload([int? memberId, bool? redeemPoints]) {
     if (_cart.isEmpty) {
       _showErrorSnackbar('Keranjang belanja kosong. Ketuk kartu produk untuk menambahkan.');
       return null;
@@ -191,14 +232,37 @@ class PosPageState extends State<PosPage> {
   // -------------------------------------------------------------
   // PEMBAYARAN TUNAI (CASH)
   // -------------------------------------------------------------
-  void _handleCashPayment() {
-    final payload = _getOrderPayload();
+  Future<void> _handleCashPayment([int? memberId, bool? redeemPoints]) async {
+    final effMemberId = memberId ?? _selectedMember?.id;
+    final effRedeem = redeemPoints ?? _redeemPoints;
+    final payload = _getOrderPayload(effMemberId, effRedeem);
     if (payload == null) return;
+
+    final itemsPayload = payload['items'] as List<Map<String, dynamic>>?;
+    int finalAmount = payload['amount'] as int;
+
+    try {
+      final calc = await _posService.calculateOrder(
+        items: itemsPayload,
+        memberId: effMemberId,
+        redeemPoints: effRedeem,
+      );
+      if (calc != null && calc['total'] is num) {
+        finalAmount = (calc['total'] as num).toInt();
+        if (mounted) setState(() => _serverCalc = calc);
+      }
+    } catch (e) {
+      debugPrint('Kalkulasi server cash payment gagal: $e');
+    }
+
+    if (!mounted) return;
 
     CashPaymentBottomSheet.show(
       context,
-      finalAmount: payload['amount'] as int,
-      itemsPayload: payload['items'] as List<Map<String, dynamic>>?,
+      finalAmount: finalAmount,
+      itemsPayload: itemsPayload,
+      memberId: effMemberId,
+      redeemPoints: effRedeem,
       onSuccess: _showSuccessReceiptDialog,
       onError: _showErrorSnackbar,
     );
@@ -207,19 +271,33 @@ class PosPageState extends State<PosPage> {
   // -------------------------------------------------------------
   // PEMBAYARAN QRIS
   // -------------------------------------------------------------
-  Future<void> _handleGenerateQris() async {
-    final payload = _getOrderPayload();
+  Future<void> _handleGenerateQris([int? memberId, bool? redeemPoints]) async {
+    final effMemberId = memberId ?? _selectedMember?.id;
+    final effRedeem = redeemPoints ?? _redeemPoints;
+    final payload = _getOrderPayload(effMemberId, effRedeem);
     if (payload == null) return;
 
-    final finalAmount = payload['amount'] as int;
     final itemsPayload = payload['items'] as List<Map<String, dynamic>>?;
+    int finalAmount = payload['amount'] as int;
 
     setState(() => _isGenerating = true);
 
     try {
+      final calc = await _posService.calculateOrder(
+        items: itemsPayload,
+        memberId: effMemberId,
+        redeemPoints: effRedeem,
+      );
+      if (calc != null && calc['total'] is num) {
+        finalAmount = (calc['total'] as num).toInt();
+        if (mounted) setState(() => _serverCalc = calc);
+      }
+
       final response = await _posService.generateQris(
         amount: itemsPayload == null ? finalAmount : null,
         items: itemsPayload,
+        memberId: effMemberId,
+        redeemPoints: effRedeem,
       );
 
       if (mounted) {
@@ -231,7 +309,7 @@ class PosPageState extends State<PosPage> {
         setState(() => _isGenerating = false);
         _showErrorSnackbar(
           'Gagal membuat QRIS: $e',
-          onRetry: _handleGenerateQris,
+          onRetry: () => _handleGenerateQris(effMemberId, effRedeem),
         );
       }
     }
@@ -268,6 +346,8 @@ class PosPageState extends State<PosPage> {
         }).toList();
       }
       _cart.clear();
+      _selectedMember = null;
+      _redeemPoints = false;
     });
 
     // 2. Sinkronkan data aktual dari server database Laravel
@@ -297,8 +377,26 @@ class PosPageState extends State<PosPage> {
       context,
       products: _products,
       cart: _cart,
-      onClearCart: () => setState(() => _cart.clear()),
-      onIncrement: (p) => setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1),
+      initialMember: _selectedMember,
+      initialRedeemPoints: _redeemPoints,
+      onMemberChanged: (m) {
+        setState(() => _selectedMember = m);
+        _updateServerCalculation();
+      },
+      onRedeemPointsChanged: (r) {
+        setState(() => _redeemPoints = r);
+        _updateServerCalculation();
+      },
+      onClearCart: () => setState(() {
+        _cart.clear();
+        _selectedMember = null;
+        _redeemPoints = false;
+        _serverCalc = null;
+      }),
+      onIncrement: (p) {
+        setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1);
+        _updateServerCalculation();
+      },
       onDecrement: (p) {
         setState(() {
           final current = _cart[p.id] ?? 0;
@@ -308,9 +406,10 @@ class PosPageState extends State<PosPage> {
             _cart.remove(p.id);
           }
         });
+        _updateServerCalculation();
       },
-      onCashPayment: _handleCashPayment,
-      onQrisPayment: _handleGenerateQris,
+      onCashPayment: (mId, rPts) => _handleCashPayment(mId, rPts),
+      onQrisPayment: (mId, rPts) => _handleGenerateQris(mId, rPts),
     );
   }
 
@@ -333,7 +432,12 @@ class PosPageState extends State<PosPage> {
               tooltip: 'Kosongkan Keranjang',
               icon: const Icon(Icons.delete_sweep_outlined),
               onPressed: () {
-                setState(() => _cart.clear());
+                setState(() {
+                  _cart.clear();
+                  _selectedMember = null;
+                  _redeemPoints = false;
+                  _serverCalc = null;
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Keranjang berhasil dikosongkan'),
@@ -369,8 +473,14 @@ class PosPageState extends State<PosPage> {
         isLoading: _isLoadingProducts,
         cart: _cart,
         onReload: _loadProducts,
-        onAddToCart: (p) => setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1),
-        onIncrement: (p) => setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1),
+        onAddToCart: (p) {
+          setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1);
+          _updateServerCalculation();
+        },
+        onIncrement: (p) {
+          setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1);
+          _updateServerCalculation();
+        },
         onDecrement: (p) {
           setState(() {
             final current = _cart[p.id] ?? 0;
@@ -380,6 +490,7 @@ class PosPageState extends State<PosPage> {
               _cart.remove(p.id);
             }
           });
+          _updateServerCalculation();
         },
       ),
       bottomNavigationBar: PosCheckoutBar(
@@ -391,8 +502,8 @@ class PosPageState extends State<PosPage> {
         isGeneratingQris: _isGenerating,
         isEmbedded: widget.isEmbedded,
         onOpenCart: _showCartDetailsBottomSheet,
-        onCashPayment: _handleCashPayment,
-        onQrisPayment: _handleGenerateQris,
+        onCashPayment: () => _handleCashPayment(),
+        onQrisPayment: () => _handleGenerateQris(),
       ),
     );
   }

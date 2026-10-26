@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
+import 'purchase_return_page.dart';
 import 'tabs/gudang_category_tab.dart';
 import 'tabs/gudang_dashboard_tab.dart';
 import 'tabs/gudang_inbound_tab.dart';
@@ -39,14 +40,29 @@ class _GudangMainPageState extends State<GudangMainPage> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         title: const Text('Keluar dari Akun?'),
-        content: const Text('Apakah Anda yakin ingin logout dari akun Admin Gudang?'),
+        content: const Text(
+          'Apakah Anda yakin ingin logout dari akun Admin Gudang?',
+        ),
         actions: [
+          IconButton(
+            tooltip: 'Retur Pembelian',
+            icon: const Icon(Icons.assignment_return_outlined),
+            onPressed: () =>
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PurchaseReturnPage()),
+                ).then((_) {
+                  if (mounted) setState(() {});
+                }),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE65100),
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               AuthService().logout();
@@ -56,7 +72,10 @@ class _GudangMainPageState extends State<GudangMainPage> {
                 (route) => false,
               );
             },
-            child: const Text('Ya, Logout', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Ya, Logout',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -79,16 +98,13 @@ class _GudangMainPageState extends State<GudangMainPage> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          GudangDashboardTab(onNavigateTab: _onTabTapped),
-          const GudangStockTab(),
-          const GudangInboundTab(),
-          const GudangCategoryTab(),
-          const GudangSuppliersTab(),
-        ],
-      ),
+      body: [
+        GudangDashboardTab(onNavigateTab: _onTabTapped),
+        const GudangStockTab(),
+        const GudangInboundTab(),
+        const GudangCategoryTab(),
+        const GudangSuppliersTab(),
+      ][_currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -105,7 +121,9 @@ class _GudangMainPageState extends State<GudangMainPage> {
             height: 68,
             backgroundColor: Colors.white,
             indicatorColor: Colors.transparent,
-            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
+              states,
+            ) {
               if (states.contains(WidgetState.selected)) {
                 return const TextStyle(
                   fontSize: 12,
@@ -121,15 +139,9 @@ class _GudangMainPageState extends State<GudangMainPage> {
             }),
             iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
               if (states.contains(WidgetState.selected)) {
-                return const IconThemeData(
-                  color: Color(0xFFE65100),
-                  size: 24,
-                );
+                return const IconThemeData(color: Color(0xFFE65100), size: 24);
               }
-              return IconThemeData(
-                color: Colors.grey.shade600,
-                size: 24,
-              );
+              return IconThemeData(color: Colors.grey.shade600, size: 24);
             }),
           ),
           child: NavigationBar(
