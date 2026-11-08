@@ -1,9 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/product.dart';
-import '../../../models/supplier.dart';
+import '../../../models/product_supplier_item.dart';
 import '../../../services/gudang_service.dart';
-import '../../../services/supplier_service.dart';
 
 class StockOutDialog extends StatefulWidget {
   final Product product;
@@ -36,19 +36,20 @@ class StockOutDialog extends StatefulWidget {
 
 class _StockOutDialogState extends State<StockOutDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _qtyController = TextEditingController(text: '');
+  final _qtyController = TextEditingController();
   final _refController = TextEditingController();
   final _noteController = TextEditingController();
 
   int? _selectedSupplierId;
-  List<Supplier> _suppliers = [];
+  int _selectedSupplierLimit = 0;
+  List<ProductSupplierItem> _suppliers = [];
   bool _isLoadingSuppliers = true;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSuppliers();
+    _loadRelevantSuppliers();
   }
 
   @override
@@ -59,20 +60,38 @@ class _StockOutDialogState extends State<StockOutDialog> {
     super.dispose();
   }
 
-  Future<void> _loadSuppliers() async {
+  Future<void> _loadRelevantSuppliers() async {
     try {
-      final list = await SupplierService().getSuppliers();
+      final list = await GudangService().getProductSuppliers(widget.product.id);
       if (mounted) {
         setState(() {
           _suppliers = list;
           _isLoadingSuppliers = false;
+          if (_suppliers.isNotEmpty) {
+            _selectedSupplierId = _suppliers.first.id;
+            _selectedSupplierLimit = _suppliers.first.netAvailable;
+          } else {
+            _selectedSupplierId = null;
+            _selectedSupplierLimit = widget.product.stock;
+          }
         });
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoadingSuppliers = false);
+        setState(() {
+          _isLoadingSuppliers = false;
+          _selectedSupplierId = null;
+          _selectedSupplierLimit = widget.product.stock;
+        });
       }
     }
+  }
+
+  int get _maxStockOutQty {
+    if (_selectedSupplierId != null) {
+      return min(widget.product.stock, _selectedSupplierLimit);
+    }
+    return widget.product.stock;
   }
 
   Future<void> _submit() async {
@@ -93,6 +112,16 @@ class _StockOutDialogState extends State<StockOutDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Stok tidak mencukupi! Maksimal: ${widget.product.stock} unit'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedSupplierId != null && qty > _selectedSupplierLimit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Jumlah melebihi sisa pasokan rekanan ($_selectedSupplierLimit unit)'),
           backgroundColor: Colors.red,
         ),
       );
@@ -164,6 +193,9 @@ class _StockOutDialogState extends State<StockOutDialog> {
   Widget build(BuildContext context) {
     const primaryRose = Color(0xFFE11D48);
     const lightRose = Color(0xFFFFE4E6);
+
+    final currentTypedQty = int.tryParse(_qtyController.text.trim()) ?? 0;
+    final isExceedingSupplier = _selectedSupplierId != null && currentTypedQty > _selectedSupplierLimit;
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -250,59 +282,110 @@ class _StockOutDialogState extends State<StockOutDialog> {
                   const Divider(height: 1, color: Color(0xFFF3F4F6)),
                   const SizedBox(height: 16),
 
-                  // ── SUPPLIER TUJUAN RETUR (OPSIONAL) ──────────────────
-                  const Text(
-                    'Supplier Tujuan Retur (Opsional)',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF4B5563),
-                    ),
+                  // ── SUPPLIER TUJUAN RETUR (HANYA YANG PERNAH MENGSUPLAI) ──
+                  Row(
+                    children: [
+                      const Text(
+                        'Supplier Tujuan Retur ',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4B5563),
+                        ),
+                      ),
+                      const Text(
+                        '*',
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      if (_isLoadingSuppliers) ...[
+                        const SizedBox(width: 8),
+                        const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 1.8, color: primaryRose),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 6),
-                  DropdownButtonFormField<int?>(
-                    initialValue: _selectedSupplierId,
-                    isExpanded: true,
-                    style: const TextStyle(fontSize: 13.5, color: Color(0xFF1F2937)),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: primaryRose, width: 1.5),
-                      ),
-                    ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text(
-                          '-- Tanpa Supplier / Retur Umum --',
-                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13.5),
-                        ),
-                      ),
-                      if (!_isLoadingSuppliers)
-                        ..._suppliers.map(
-                          (s) => DropdownMenuItem<int?>(
-                            value: s.id,
-                            child: Text(
-                              s.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w500),
+                  _isLoadingSuppliers
+                      ? Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            color: const Color(0xFFF9FAFB),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: const Text(
+                            'Memuat riwayat supplier pemasok...',
+                            style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                          ),
+                        )
+                      : DropdownButtonFormField<int?>(
+                          key: ValueKey(_selectedSupplierId),
+                          initialValue: _selectedSupplierId,
+                          isExpanded: true,
+                          style: const TextStyle(fontSize: 13.5, color: Color(0xFF1F2937)),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: primaryRose, width: 1.5),
                             ),
                           ),
+                          items: [
+                            // Rekanan yang relevan (pernah mengsuplai barang ini)
+                            ..._suppliers.map(
+                              (s) => DropdownMenuItem<int?>(
+                                value: s.id,
+                                child: Text(
+                                  '${s.name} (Sisa: ${s.netAvailable} unit)',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                ),
+                              ),
+                            ),
+                            // Opsi Retur Internal / Tanpa Supplier
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text(
+                                'Tanpa Supplier (Kerusakan / Internal Toko)',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Color(0xFF4B5563), fontSize: 13),
+                              ),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedSupplierId = val;
+                              if (val != null) {
+                                final s = _suppliers.firstWhere(
+                                  (item) => item.id == val,
+                                  orElse: () => ProductSupplierItem(
+                                    id: val,
+                                    name: '',
+                                    totalIn: 0,
+                                    totalOut: 0,
+                                    netAvailable: widget.product.stock,
+                                  ),
+                                );
+                                _selectedSupplierLimit = s.netAvailable;
+                              } else {
+                                _selectedSupplierLimit = widget.product.stock;
+                              }
+                            });
+                          },
                         ),
-                    ],
-                    onChanged: (val) {
-                      setState(() => _selectedSupplierId = val);
-                    },
-                  ),
                   const SizedBox(height: 14),
 
                   // ── ROW: JUMLAH KELUAR & NO. SURAT RETUR ──────────────
@@ -332,11 +415,11 @@ class _StockOutDialogState extends State<StockOutDialog> {
                                 ),
                               ),
                               Text(
-                                'Maks: ${widget.product.stock}',
+                                'Maks: $_maxStockOutQty',
                                 style: const TextStyle(
                                   fontSize: 11.5,
                                   color: Color(0xFF6B7280),
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
@@ -346,6 +429,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                             controller: _qtyController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
                               hintText: '0',
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -367,9 +451,23 @@ class _StockOutDialogState extends State<StockOutDialog> {
                               final n = int.tryParse(v.trim());
                               if (n == null || n <= 0) return 'Min 1';
                               if (n > widget.product.stock) return 'Maks ${widget.product.stock}';
+                              if (_selectedSupplierId != null && n > _selectedSupplierLimit) {
+                                return 'Melebihi sisa pasokan ($_selectedSupplierLimit unit)';
+                              }
                               return null;
                             },
                           ),
+                          if (isExceedingSupplier) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Melebihi sisa pasokan ($_selectedSupplierLimit unit)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFFE11D48),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ],
                       );
 
@@ -377,7 +475,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'No. Surat Retur / Dokumen',
+                            'No. Dokumen / Surat Retur',
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
@@ -388,7 +486,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                           TextFormField(
                             controller: _refController,
                             decoration: InputDecoration(
-                              hintText: 'Contoh:  RTR-2026/001',
+                              hintText: 'Opsional (misal: RTR-001)',
                               hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF9CA3AF)),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               border: OutlineInputBorder(
@@ -439,7 +537,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                         color: Color(0xFF4B5563),
                       ),
                       children: [
-                        TextSpan(text: 'Alasan Retur / Catatan '),
+                        TextSpan(text: 'Alasan Keluar / Catatan '),
                         TextSpan(
                           text: '*',
                           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
@@ -452,7 +550,7 @@ class _StockOutDialogState extends State<StockOutDialog> {
                     controller: _noteController,
                     maxLines: 2,
                     decoration: InputDecoration(
-                      hintText: 'Contoh: Barang cacat kemasan, expired, atau retur...',
+                      hintText: 'Tulis alasan atau klik opsi di bawah...',
                       hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF9CA3AF)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       border: OutlineInputBorder(
@@ -470,20 +568,22 @@ class _StockOutDialogState extends State<StockOutDialog> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return 'Alasan retur / pengeluaran barang wajib diisi';
+                        return 'Alasan keluar / retur wajib diisi';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 8),
+
+                  // Quick Chips persis seperti Web
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      _buildPresetChip('+ Rusak / Cacat', 'Barang Rusak / Cacat Kemasan'),
-                      _buildPresetChip('+ Retur ke Supplier', 'Retur ke Pihak Supplier'),
+                      _buildPresetChip('+ Barang Rusak / Cacat', 'Barang Rusak / Cacat'),
+                      _buildPresetChip('+ Retur ke Supplier', 'Retur ke Supplier'),
                       _buildPresetChip('+ Kadaluarsa', 'Kadaluarsa'),
-                      _buildPresetChip('+ Pemusnahan Internal', 'Pemusnahan Internal Toko'),
+                      _buildPresetChip('+ Pemusnahan Internal', 'Pemusnahan Internal'),
                     ],
                   ),
                   const SizedBox(height: 22),

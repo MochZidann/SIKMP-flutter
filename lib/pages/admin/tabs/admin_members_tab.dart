@@ -57,6 +57,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
   void _openCreateMember() {
     MemberFormDialog.show(
       context,
+      primaryColor: const Color(0xFF00897B),
       onSaved: _loadMembers,
     );
   }
@@ -65,6 +66,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
     MemberFormDialog.show(
       context,
       member: member,
+      primaryColor: const Color(0xFF00897B),
       onSaved: _loadMembers,
     );
   }
@@ -265,7 +267,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                           children: [
                                             Text(
                                               m.name,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15.5, color: Color(0xFF0F172A)),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -276,7 +278,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   m.phone != null && m.phone!.isNotEmpty ? m.phone! : 'Tanpa nomor telepon',
-                                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
                                                 ),
                                               ],
                                             ),
@@ -289,7 +291,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                                   Expanded(
                                                     child: Text(
                                                       m.address!,
-                                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF334155)),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
@@ -301,7 +303,7 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                               const SizedBox(height: 4),
                                               Text(
                                                 'Terdaftar: ${DateHelper.formatEpochMs(m.createdAtEpochMs, withTime: false)}',
-                                                style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                                                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: Color(0xFF475569)),
                                               ),
                                             ],
                                           ],
@@ -327,9 +329,9 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                                                 Text(
                                                   '${m.points} Poin',
                                                   style: TextStyle(
-                                                    fontSize: 11,
+                                                    fontSize: 12,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.amber.shade900,
+                                                    color: Color(0xFF92400E),
                                                   ),
                                                 ),
                                               ],

@@ -107,6 +107,11 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
     }
   }
 
+  int _getCategoryCount(String cat) {
+    if (cat == 'Semua') return _products.length;
+    return _products.where((p) => (p.category ?? '').toLowerCase() == cat.toLowerCase()).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFFE65100);
@@ -117,50 +122,14 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
         children: [
-          // ── HEADER & TOOLBAR (PERSIS DENGAN WEB KELOLA STOK) ───────────
+          // ── SEARCH BAR & COMPACT UNIFIED FILTER TOOLBAR ───────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             color: Colors.white,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Judul
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.tune_rounded, color: primaryColor, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Kelola Stok Barang',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Atur stok masuk, keluar, dan opname fisik barang',
-                            style: TextStyle(fontSize: 11, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Search Bar + Camera Scanner
+                // 1. Search Bar + Camera Scanner
                 Row(
                   children: [
                     Expanded(
@@ -219,81 +188,144 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
                 ),
                 const SizedBox(height: 10),
 
-                // Filter Status Stok Chips (Semua, Kritis, Habis)
-                Row(
-                  children: [
-                    ChoiceChip(
-                      showCheckmark: false,
-                      label: Text(
-                        'Semua (${_products.length})',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      selected: _stockFilter == 'ALL',
-                      selectedColor: const Color(0xFF334155),
-                      labelStyle: TextStyle(
-                        color: _stockFilter == 'ALL' ? Colors.white : const Color(0xFF333333),
-                      ),
-                      backgroundColor: Colors.grey.shade100,
-                      onSelected: (_) => setState(() => _stockFilter = 'ALL'),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      showCheckmark: false,
-                      label: Text(
-                        'Kritis (< 5) ($lowCount)',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      selected: _stockFilter == 'LOW',
-                      selectedColor: Colors.amber.shade900,
-                      labelStyle: TextStyle(
-                        color: _stockFilter == 'LOW' ? Colors.white : const Color(0xFF333333),
-                      ),
-                      backgroundColor: Colors.grey.shade100,
-                      onSelected: (_) => setState(() => _stockFilter = 'LOW'),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      showCheckmark: false,
-                      label: Text(
-                        'Habis ($outCount)',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      selected: _stockFilter == 'OUT',
-                      selectedColor: Colors.red.shade700,
-                      labelStyle: TextStyle(
-                        color: _stockFilter == 'OUT' ? Colors.white : const Color(0xFF333333),
-                      ),
-                      backgroundColor: Colors.grey.shade100,
-                      onSelected: (_) => setState(() => _stockFilter = 'OUT'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Kategori Chips Horizontal
-                SizedBox(
-                  height: 30,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _categories.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
-                    itemBuilder: (context, index) {
-                      final cat = _categories[index];
-                      final isSelected = _selectedCategory == cat;
-                      return ChoiceChip(
-                        showCheckmark: false,
-                        label: Text(cat, style: const TextStyle(fontSize: 10.5)),
-                        selected: isSelected,
-                        selectedColor: primaryColor,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFF333333),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                // 2. Baris Filter Terpadu: Kategori Dropdown & Filter Status Stok
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      // Dropdown Pilihan Kategori
+                      PopupMenuButton<String>(
+                        tooltip: 'Filter Kategori',
+                        onSelected: (cat) => setState(() => _selectedCategory = cat),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        itemBuilder: (ctx) => _categories.map((cat) {
+                          final count = _getCategoryCount(cat);
+                          final isSelected = _selectedCategory == cat;
+                          return PopupMenuItem<String>(
+                            value: cat,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected ? Icons.check_circle_rounded : Icons.folder_outlined,
+                                  size: 16,
+                                  color: isSelected ? primaryColor : Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    cat == 'Semua' ? 'Semua Kategori' : cat,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected ? primaryColor : Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? primaryColor.withValues(alpha: 0.1) : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '$count',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isSelected ? primaryColor : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _selectedCategory != 'Semua' ? const Color(0xFFFFF7ED) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _selectedCategory != 'Semua' ? primaryColor : Colors.grey.shade300,
+                              width: _selectedCategory != 'Semua' ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.filter_list_rounded,
+                                size: 14,
+                                color: _selectedCategory != 'Semua' ? primaryColor : Colors.grey.shade700,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                _selectedCategory == 'Semua' ? 'Kategori: Semua' : 'Kategori: $_selectedCategory',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedCategory != 'Semua' ? primaryColor : const Color(0xFF334155),
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(
+                                Icons.arrow_drop_down_rounded,
+                                size: 18,
+                                color: _selectedCategory != 'Semua' ? primaryColor : Colors.grey.shade600,
+                              ),
+                            ],
+                          ),
                         ),
-                        backgroundColor: Colors.grey.shade100,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        onSelected: (_) => setState(() => _selectedCategory = cat),
-                      );
-                    },
+                      ),
+                      if (_selectedCategory != 'Semua') ...[
+                        const SizedBox(width: 4),
+                        InkWell(
+                          onTap: () => setState(() => _selectedCategory = 'Semua'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close_rounded, size: 12, color: Colors.black54),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 8),
+
+                      // Separator Vertikal
+                      Container(
+                        height: 20,
+                        width: 1,
+                        color: Colors.grey.shade300,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Filter Status Stok Chips
+                      _buildStatusFilterChip(
+                        label: 'Semua',
+                        value: 'ALL',
+                        count: _products.length,
+                        activeColor: primaryColor,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildStatusFilterChip(
+                        label: 'Kritis (< 5)',
+                        value: 'LOW',
+                        count: lowCount,
+                        activeColor: Colors.amber.shade900,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildStatusFilterChip(
+                        label: 'Habis',
+                        value: 'OUT',
+                        count: outCount,
+                        activeColor: Colors.red.shade700,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -342,25 +374,17 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
     final isOut = p.isOutOfStock;
     final isLow = p.isLowStock;
 
-    final Color statusBg;
     final Color statusText;
-    final Color statusBorder;
     final String statusLabel;
 
     if (isOut) {
-      statusBg = const Color(0xFFFFF1F2);
       statusText = const Color(0xFFBE123C);
-      statusBorder = const Color(0xFFFECDD3);
       statusLabel = 'Habis';
     } else if (isLow) {
-      statusBg = const Color(0xFFFFFBEB);
       statusText = const Color(0xFFB45309);
-      statusBorder = const Color(0xFFFDE68A);
       statusLabel = 'Kritis';
     } else {
-      statusBg = const Color(0xFFECFDF5);
       statusText = const Color(0xFF047857);
-      statusBorder = const Color(0xFFA7F3D0);
       statusLabel = 'Aman';
     }
 
@@ -370,11 +394,7 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isOut
-              ? Colors.red.shade200
-              : isLow
-                  ? Colors.orange.shade200
-                  : Colors.grey.shade200,
+          color: const Color(0xFFE2E8F0),
           width: 1.0,
         ),
         boxShadow: [
@@ -388,14 +408,14 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── BARIS ATAS: GAMBAR, NAMA, KATEGORI, BARCODE & BADGE STOK ──
+          // ── BARIS ATAS: GAMBAR, NAMA, KATEGORI, BARCODE & ANGKA STOK ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 1. Gambar Produk
               ProductImageWidget.fromProduct(
                 product: p,
-                size: 46,
+                size: 44,
                 borderRadius: BorderRadius.circular(10),
               ),
               const SizedBox(width: 10),
@@ -410,14 +430,16 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13.5,
-                        color: Color(0xFF1E293B),
+                        color: Color(0xFF0F172A),
                         height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 5,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
@@ -434,21 +456,23 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
                             ),
                           ),
                         ),
-                        if (p.barcode != null && p.barcode!.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              p.barcode!,
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: Colors.grey.shade500,
-                                fontFamily: 'monospace',
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        if (p.barcode != null && p.barcode!.isNotEmpty)
+                          Text(
+                            p.barcode!,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.grey.shade600,
+                              fontFamily: 'monospace',
                             ),
                           ),
-                        ],
+                        Text(
+                          '• Min: ${p.minimumStock}',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -456,33 +480,31 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
               ),
               const SizedBox(width: 8),
 
-              // 3. Badge Angka Stok & Status
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: statusBorder),
-                ),
+              // 3. Angka Stok & Status (Di Tengah)
+              SizedBox(
+                width: 48,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       '${p.stock}',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 17,
                         fontWeight: FontWeight.w900,
                         color: statusText,
                         height: 1.1,
                       ),
                     ),
+                    const SizedBox(height: 1),
                     Text(
                       statusLabel,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 8.5,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w700,
                         color: statusText,
-                        letterSpacing: 0.3,
                       ),
                     ),
                   ],
@@ -491,75 +513,69 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
             ],
           ),
           const SizedBox(height: 10),
-          const Divider(height: 1),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 8),
 
-          // ── BARIS BAWAH: INFO MIN STOK & 3 BUTTON (MASUK, KELUAR, OPNAME) ──
+          // ── BARIS AKSI: 3 BUTTON SIMETRIS (MASUK, KELUAR, OPNAME) ──
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Min. Stok: ${p.minimumStock} unit',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              // 1. + Barang Masuk (Pasokan)
+              Expanded(
+                child: _buildStockButton(
+                  label: '+ Masuk',
+                  icon: Icons.add_rounded,
+                  color: const Color(0xFF059669),
+                  bgColor: const Color(0xFFECFDF5),
+                  borderColor: const Color(0xFFA7F3D0),
+                  tooltip: 'Stok Masuk (Pasokan)',
+                  onTap: () {
+                    StockInDialog.show(
+                      context,
+                      product: p,
+                      onStockUpdated: _loadProducts,
+                    );
+                  },
+                ),
               ),
+              const SizedBox(width: 8),
 
-              // 3 Button Aksi (Sama dengan Web)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. + Barang Masuk (Pasokan)
-                  _buildStockButton(
-                    label: 'Masuk',
-                    icon: Icons.add_rounded,
-                    color: const Color(0xFF059669),
-                    bgColor: const Color(0xFFECFDF5),
-                    borderColor: const Color(0xFFA7F3D0),
-                    tooltip: 'Stok Masuk (Pasokan)',
-                    onTap: () {
-                      StockInDialog.show(
-                        context,
-                        product: p,
-                        onStockUpdated: _loadProducts,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 6),
+              // 2. − Barang Keluar (Retur / Rusak)
+              Expanded(
+                child: _buildStockButton(
+                  label: '− Keluar',
+                  icon: Icons.remove_rounded,
+                  color: const Color(0xFFE11D48),
+                  bgColor: const Color(0xFFFFF1F2),
+                  borderColor: const Color(0xFFFECDD3),
+                  tooltip: 'Barang Keluar / Retur',
+                  onTap: () {
+                    StockOutDialog.show(
+                      context,
+                      product: p,
+                      onStockUpdated: _loadProducts,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
 
-                  // 2. − Barang Keluar (Retur / Rusak)
-                  _buildStockButton(
-                    label: 'Keluar',
-                    icon: Icons.remove_rounded,
-                    color: const Color(0xFFE11D48),
-                    bgColor: const Color(0xFFFFF1F2),
-                    borderColor: const Color(0xFFFECDD3),
-                    tooltip: 'Barang Keluar / Retur',
-                    onTap: () {
-                      StockOutDialog.show(
-                        context,
-                        product: p,
-                        onStockUpdated: _loadProducts,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 6),
-
-                  // 3. 📝 Opname Stok (Penyesuaian Fisik)
-                  _buildStockButton(
-                    label: 'Opname',
-                    icon: Icons.tune_rounded,
-                    color: const Color(0xFFD97706),
-                    bgColor: const Color(0xFFFFFBEB),
-                    borderColor: const Color(0xFFFDE68A),
-                    tooltip: 'Stock Opname (Penyesuaian Fisik)',
-                    onTap: () {
-                      StockAdjustDialog.show(
-                        context,
-                        product: p,
-                        onStockUpdated: _loadProducts,
-                      );
-                    },
-                  ),
-                ],
+              // 3. 📝 Opname Stok (Penyesuaian Fisik)
+              Expanded(
+                child: _buildStockButton(
+                  label: 'Opname',
+                  icon: Icons.tune_rounded,
+                  color: const Color(0xFFD97706),
+                  bgColor: const Color(0xFFFFFBEB),
+                  borderColor: const Color(0xFFFDE68A),
+                  tooltip: 'Stock Opname (Penyesuaian Fisik)',
+                  onTap: () {
+                    StockAdjustDialog.show(
+                      context,
+                      product: p,
+                      onStockUpdated: _loadProducts,
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -583,27 +599,81 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: borderColor),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 14, color: color),
               const SizedBox(width: 3),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusFilterChip({
+    required String label,
+    required String value,
+    required int count,
+    required Color activeColor,
+  }) {
+    final isSelected = _stockFilter == value;
+
+    return InkWell(
+      onTap: () => setState(() => _stockFilter = value),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? activeColor : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.white : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

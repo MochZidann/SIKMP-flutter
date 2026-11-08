@@ -29,25 +29,17 @@ class StockItemCard extends StatelessWidget {
     final isOutOfStock = product.isOutOfStock;
     final isLowStock = product.isLowStock;
 
-    final Color statusBgColor;
     final Color statusTextColor;
-    final Color statusBorderColor;
     final String statusLabel;
 
     if (isOutOfStock) {
-      statusBgColor = const Color(0xFFFFF1F2);
       statusTextColor = const Color(0xFFBE123C);
-      statusBorderColor = const Color(0xFFFECDD3);
       statusLabel = 'Habis';
     } else if (isLowStock) {
-      statusBgColor = const Color(0xFFFFFBEB);
       statusTextColor = const Color(0xFFB45309);
-      statusBorderColor = const Color(0xFFFDE68A);
       statusLabel = 'Kritis';
     } else {
-      statusBgColor = const Color(0xFFECFDF5);
       statusTextColor = const Color(0xFF047857);
-      statusBorderColor = const Color(0xFFA7F3D0);
       statusLabel = 'Aman';
     }
 
@@ -57,11 +49,7 @@ class StockItemCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isOutOfStock
-              ? Colors.red.shade200
-              : isLowStock
-                  ? Colors.orange.shade200
-                  : Colors.grey.shade200,
+          color: const Color(0xFFE2E8F0),
           width: 1.0,
         ),
         boxShadow: [
@@ -194,33 +182,31 @@ class StockItemCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
 
-                // 3. BADGE STOK & STATUS
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusBgColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusBorderColor),
-                  ),
+                // 3. ANGKA STOK & STATUS (DI TENGAH)
+                SizedBox(
+                  width: 48,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         '${product.stock}',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
                           color: statusTextColor,
                           height: 1.1,
                         ),
                       ),
+                      const SizedBox(height: 1),
                       Text(
                         statusLabel,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 8.5,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           color: statusTextColor,
-                          letterSpacing: 0.3,
                         ),
                       ),
                     ],

@@ -3,8 +3,8 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/supplier.dart';
 import '../../../services/supplier_service.dart';
+import '../gudang_supplier_mutations_page.dart';
 import '../widgets/supplier_form_dialog.dart';
-import '../widgets/supplier_mutations_dialog.dart';
 
 class GudangSuppliersTab extends StatefulWidget {
   const GudangSuppliersTab({super.key});
@@ -75,7 +75,12 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
   }
 
   void _openMutations(Supplier supplier) {
-    SupplierMutationsDialog.show(context, supplier: supplier);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GudangSupplierMutationsPage(supplier: supplier),
+      ),
+    );
   }
 
   void _confirmDeleteSupplier(Supplier supplier) {
@@ -184,15 +189,12 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _openCreateSupplier,
         backgroundColor: primaryColor,
         elevation: 3,
-        icon: const Icon(Icons.add_business_rounded, color: Colors.white, size: 20),
-        label: const Text(
-          'Tambah Supplier',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
       ),
       body: Column(
         children: [
@@ -356,220 +358,214 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
                           itemBuilder: (context, index) {
                             final s = _filteredSuppliers[index];
 
-                            return Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
+                            return Material(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.grey.shade200),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                onTap: () => _openMutations(s),
+                                child: Container(
+                                  padding: const EdgeInsets.all(13),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.02),
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Top row: Avatar, Name, Code, Badges
-                                  Row(
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: primaryColor.withValues(alpha: 0.12),
-                                        child: Text(
-                                          s.name.isNotEmpty ? s.name.substring(0, 1).toUpperCase() : 'S',
-                                          style: const TextStyle(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              s.name,
+                                      // Top row: Avatar, Name, Action icons
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 19,
+                                            backgroundColor: primaryColor.withValues(alpha: 0.12),
+                                            child: Text(
+                                              s.name.isNotEmpty ? s.name.substring(0, 1).toUpperCase() : 'S',
                                               style: const TextStyle(
+                                                color: primaryColor,
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 14.5,
-                                                color: Color(0xFF1E293B),
+                                                fontSize: 15,
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 4),
-                                            Row(
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Icon(Icons.person_outline, size: 13, color: Colors.grey.shade500),
-                                                const SizedBox(width: 4),
                                                 Text(
-                                                  'PIC: ${s.contactPerson ?? "-"}',
-                                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                                                ),
-                                                if (s.phone != null && s.phone!.isNotEmpty) ...[
-                                                  const SizedBox(width: 8),
-                                                  Text('•', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-                                                  const SizedBox(width: 8),
-                                                  Icon(Icons.phone_outlined, size: 12, color: Colors.grey.shade500),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    s.phone!,
-                                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                  s.name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                    color: Color(0xFF0F172A),
                                                   ),
-                                                ],
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.person_outline, size: 13, color: Colors.grey.shade600),
+                                                    const SizedBox(width: 3),
+                                                    Flexible(
+                                                      child: Text(
+                                                        s.contactPerson != null && s.contactPerson!.isNotEmpty
+                                                            ? s.contactPerson!
+                                                            : '-',
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Color(0xFF334155),
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                    if (s.phone != null && s.phone!.isNotEmpty) ...[
+                                                      const SizedBox(width: 6),
+                                                      Text('•', style: TextStyle(fontSize: 9, color: Colors.grey.shade400)),
+                                                      const SizedBox(width: 6),
+                                                      Icon(Icons.phone_outlined, size: 12, color: Colors.grey.shade600),
+                                                      const SizedBox(width: 3),
+                                                      Flexible(
+                                                        child: Text(
+                                                          s.phone!,
+                                                          style: const TextStyle(
+                                                            fontSize: 12,
+                                                            color: Color(0xFF334155),
+                                                            fontWeight: FontWeight.w500,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
                                               ],
                                             ),
-                                            if (s.address != null && s.address!.isNotEmpty) ...[
-                                              const SizedBox(height: 3),
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.location_on_outlined, size: 12, color: Colors.grey.shade400),
-                                                  const SizedBox(width: 4),
-                                                  Expanded(
-                                                    child: Text(
-                                                      s.address!,
-                                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
+                                          ),
+                                          // Edit and Delete Icon Actions
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              InkWell(
+                                                onTap: () => _openEditSupplier(s),
+                                                borderRadius: BorderRadius.circular(6),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(5),
+                                                  child: Icon(Icons.edit_outlined, size: 18, color: Colors.blue.shade700),
+                                                ),
+                                              ),
+                                              InkWell(
+                                                onTap: () => _confirmDeleteSupplier(s),
+                                                borderRadius: BorderRadius.circular(6),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(5),
+                                                  child: Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red.shade700),
+                                                ),
                                               ),
                                             ],
+                                          ),
+                                        ],
+                                      ),
+                                      if (s.address != null && s.address!.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.location_on_outlined, size: 12, color: Colors.grey.shade500),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                s.address!,
+                                                style: const TextStyle(fontSize: 11.5, color: Color(0xFF475569)),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const Divider(height: 1),
-                                  const SizedBox(height: 10),
+                                      ],
+                                      const SizedBox(height: 9),
+                                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                                      const SizedBox(height: 8),
 
-                                  // Bottom row: Mutation chips + Action buttons
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      // Mutasi In / Out chips
+                                      // Bottom row: Mutation chips + Mutasi shortcut
                                       Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFECFDF5),
-                                              borderRadius: BorderRadius.circular(20),
-                                              border: Border.all(color: const Color(0xFFA7F3D0)),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.arrow_downward_rounded, size: 12, color: Color(0xFF059669)),
-                                                const SizedBox(width: 3),
-                                                Text(
-                                                  '+${s.totalIn}',
-                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF047857)),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFECFDF5),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: const Color(0xFFA7F3D0)),
                                                 ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFFFF1F2),
-                                              borderRadius: BorderRadius.circular(20),
-                                              border: Border.all(color: const Color(0xFFFECDD3)),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFFE11D48)),
-                                                const SizedBox(width: 3),
-                                                Text(
-                                                  '-${s.totalOut}',
-                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFBE123C)),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      // Actions: Mutasi, Edit, Hapus
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          // Mutasi button
-                                          InkWell(
-                                            onTap: () => _openMutations(s),
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFFFF7ED),
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: const Color(0xFFFFEDD5)),
-                                              ),
-                                              child: const Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(Icons.history_rounded, size: 15, color: primaryColor),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    'Mutasi',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: primaryColor,
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.arrow_downward_rounded, size: 11, color: Color(0xFF047857)),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      '+${s.totalIn}',
+                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF047857)),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFFFF1F2),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: const Color(0xFFFECDD3)),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.arrow_upward_rounded, size: 11, color: Color(0xFFBE123C)),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      '-${s.totalOut}',
+                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFBE123C)),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 6),
-
-                                          // Edit button
-                                          InkWell(
-                                            onTap: () => _openEditSupplier(s),
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.blue.shade200),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'Riwayat Pasokan',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: primaryColor,
+                                                ),
                                               ),
-                                              child: Icon(Icons.edit_rounded, size: 15, color: Colors.blue.shade700),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-
-                                          // Delete button
-                                          InkWell(
-                                            onTap: () => _confirmDeleteSupplier(s),
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.red.shade200),
-                                              ),
-                                              child: Icon(Icons.delete_outline_rounded, size: 15, color: Colors.red.shade700),
-                                            ),
+                                              const SizedBox(width: 3),
+                                              Icon(Icons.arrow_forward_ios_rounded, size: 11, color: primaryColor),
+                                            ],
                                           ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
                             );
                           },

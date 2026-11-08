@@ -8,6 +8,7 @@ import '../../../core/widgets/header_curve_clipper.dart';
 import '../../../models/product.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
+import '../gudang_members_page.dart';
 import '../widgets/product_form_dialog.dart';
 import '../widgets/stock_adjust_dialog.dart';
 import '../widgets/stock_in_dialog.dart';
@@ -376,10 +377,15 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                                   ),
                                   const SizedBox(width: 6),
                                   _buildQuickActionBtn(
-                                    title: 'Katalog',
-                                    icon: Icons.inventory_2_outlined,
+                                    title: 'Member',
+                                    icon: Icons.card_membership_rounded,
                                     color: const Color(0xFF00897B),
-                                    onTap: () => widget.onNavigateTab?.call(1),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const GudangMembersPage()),
+                                      );
+                                    },
                                   ),
                                   const SizedBox(width: 6),
                                   _buildQuickActionBtn(

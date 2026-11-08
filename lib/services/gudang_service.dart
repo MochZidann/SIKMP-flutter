@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/config/api_config.dart';
 import '../models/product.dart';
+import '../models/product_supplier_item.dart';
 import '../models/stock_movement.dart';
 import 'auth_service.dart';
 import 'pos_service.dart';
@@ -308,6 +309,29 @@ class GudangService {
         'success': false,
         'message': 'Koneksi ke server bermasalah: $e',
       };
+    }
+  }
+
+  /// Mengambil riwayat rekanan supplier yang pernah mengsuplai produk ini beserta sisa pasokannya
+  Future<List<ProductSupplierItem>> getProductSuppliers(int productId) async {
+    try {
+      final uri = Uri.parse('$gudangBaseUrl/products/$productId/suppliers');
+      final response = await http.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final dynamic decoded = json.decode(response.body);
+        final dynamic dataList = decoded is Map && decoded['data'] != null ? decoded['data'] : decoded;
+        if (dataList is List) {
+          return dataList.map((item) => ProductSupplierItem.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('GudangService getProductSuppliers error: $e');
+      return [];
     }
   }
 

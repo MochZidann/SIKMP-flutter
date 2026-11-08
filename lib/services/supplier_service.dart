@@ -164,11 +164,29 @@ class SupplierService {
   }
 
   /// Ambil riwayat mutasi barang masuk/keluar untuk supplier tertentu
-  Future<Map<String, dynamic>> getSupplierMutations(int supplierId, {String? type}) async {
+  Future<Map<String, dynamic>> getSupplierMutations(
+    int supplierId, {
+    String? type,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
-      final uri = Uri.parse('$baseUrl/$supplierId/mutations').replace(queryParameters: {
-        if (type != null && type.isNotEmpty && type != 'ALL') 'type': type,
-      });
+      final Map<String, String> queryParams = {};
+      if (type != null && type.isNotEmpty && type != 'ALL') {
+        queryParams['type'] = type;
+      }
+      if (startDate != null) {
+        queryParams['start_date'] =
+            '${startDate.year.toString().padLeft(4, "0")}-${startDate.month.toString().padLeft(2, "0")}-${startDate.day.toString().padLeft(2, "0")}';
+      }
+      if (endDate != null) {
+        queryParams['end_date'] =
+            '${endDate.year.toString().padLeft(4, "0")}-${endDate.month.toString().padLeft(2, "0")}-${endDate.day.toString().padLeft(2, "0")}';
+      }
+
+      final uri = Uri.parse('$baseUrl/$supplierId/mutations').replace(
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 

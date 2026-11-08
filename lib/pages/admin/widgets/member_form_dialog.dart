@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../models/member.dart';
 import '../../../services/member_service.dart';
 
 class MemberFormDialog extends StatefulWidget {
   final Member? member; // Jika null -> Tambah Baru, Jika tidak null -> Edit
   final VoidCallback onSaved;
+  final Color primaryColor;
 
   const MemberFormDialog({
     super.key,
     this.member,
     required this.onSaved,
+    this.primaryColor = const Color(0xFFE65100),
   });
 
   static Future<void> show(
     BuildContext context, {
     Member? member,
     required VoidCallback onSaved,
+    Color primaryColor = const Color(0xFFE65100),
   }) {
     return showDialog(
       context: context,
@@ -24,6 +26,7 @@ class MemberFormDialog extends StatefulWidget {
       builder: (ctx) => MemberFormDialog(
         member: member,
         onSaved: onSaved,
+        primaryColor: primaryColor,
       ),
     );
   }
@@ -37,7 +40,6 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _addressController;
-  late final TextEditingController _pointsController;
 
   bool _isLoading = false;
   bool get _isEdit => widget.member != null;
@@ -48,7 +50,6 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
     _nameController = TextEditingController(text: widget.member?.name ?? '');
     _phoneController = TextEditingController(text: widget.member?.phone ?? '');
     _addressController = TextEditingController(text: widget.member?.address ?? '');
-    _pointsController = TextEditingController(text: (widget.member?.points ?? 0).toString());
   }
 
   @override
@@ -56,7 +57,6 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
-    _pointsController.dispose();
     super.dispose();
   }
 
@@ -74,14 +74,13 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         address: _addressController.text.trim(),
-        points: int.tryParse(_pointsController.text.trim()) ?? 0,
       );
     } else {
       result = await service.createMember(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         address: _addressController.text.trim(),
-        points: int.tryParse(_pointsController.text.trim()) ?? 0,
+        points: 0,
       );
     }
 
@@ -92,8 +91,8 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
         widget.onSaved();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? (_isEdit ? 'Data anggota diperbarui' : 'Anggota baru berhasil ditambahkan')),
-            backgroundColor: const Color(0xFF00897B),
+            content: Text(result['message'] ?? (_isEdit ? 'Data anggota berhasil diperbarui' : 'Anggota baru berhasil ditambahkan')),
+            backgroundColor: widget.primaryColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -111,255 +110,148 @@ class _MemberFormDialogState extends State<MemberFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF00897B);
+    final primaryColor = widget.primaryColor;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      elevation: 12,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 480),
+        padding: const EdgeInsets.all(22),
+        child: SingleChildScrollView(
           child: Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── HEADER ──────────────────────────────────────────
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _isEdit ? Icons.edit_note_rounded : Icons.person_add_rounded,
-                          color: primaryColor,
-                          size: 24,
-                        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── HEADER DIALOG ──────────────────────────────────────
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _isEdit ? 'Edit Data Anggota' : 'Tambah Anggota Baru',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _isEdit
-                                  ? 'Perbarui identitas & poin belanja anggota'
-                                  : 'Daftarkan pelanggan tetap sebagai anggota',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        color: Colors.grey.shade500,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  const Divider(height: 1),
-                  const SizedBox(height: 18),
-
-                  // ── NAMA LENGKAP ─────────────────────────────────────
-                  const Text(
-                    'Nama Lengkap *',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                  ),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: Budi Santoso',
-                      prefixIcon: const Icon(Icons.badge_outlined, size: 20),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: primaryColor, width: 2),
+                      child: Icon(
+                        _isEdit ? Icons.edit_note_rounded : Icons.person_add_rounded,
+                        color: primaryColor,
+                        size: 24,
                       ),
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Nama lengkap wajib diisi';
-                      }
-                      if (v.trim().length < 2) {
-                        return 'Nama minimal 2 karakter';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // ── NOMOR TELEPON ────────────────────────────────────
-                  const Text(
-                    'Nomor Telepon / WhatsApp',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                  ),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: 081234567890',
-                      prefixIcon: const Icon(Icons.phone_outlined, size: 20),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: primaryColor, width: 2),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isEdit ? 'Edit Data Anggota' : 'Tambah Anggota Baru',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            _isEdit ? 'Perbarui informasi identitas anggota' : 'Registrasi anggota / member baru koperasi',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // ── ALAMAT TEMPAT TINGGAL ────────────────────────────
-                  const Text(
-                    'Alamat Tempat Tinggal',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                  ),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _addressController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: 'Alamat lengkap tempat tinggal...',
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.only(bottom: 24),
-                        child: Icon(Icons.home_outlined, size: 20),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: primaryColor, width: 2),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
                     ),
-                  ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
 
-                  // ── POIN BELANJA (HANYA DITAMPILKAN SAAT EDIT) ───────
-                  if (_isEdit) ...[
-                    const SizedBox(height: 14),
-                    const Text(
-                      'Poin Belanja Anggota',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                // ── NAMA LENGKAP ───────────────────────────────────────
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Lengkap *',
+                    hintText: 'Contoh: Budi Santoso',
+                    prefixIcon: Icon(Icons.person_outline_rounded, color: primaryColor, size: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Nama lengkap wajib diisi';
+                    }
+                    if (v.trim().length < 2) {
+                      return 'Nama minimal 2 karakter';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // ── NOMOR TELEPON / WA ─────────────────────────────────
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Nomor Telepon / WhatsApp',
+                    hintText: 'Contoh: 081234567890',
+                    prefixIcon: Icon(Icons.phone_outlined, color: primaryColor, size: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // ── ALAMAT TEMPAT TINGGAL ──────────────────────────────
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'Alamat Tempat Tinggal',
+                    hintText: 'Alamat lengkap tempat tinggal anggota...',
+                    prefixIcon: Icon(Icons.home_outlined, color: primaryColor, size: 20),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── ACTION BUTTONS ─────────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      child: const Text('Batal'),
                     ),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _pointsController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        prefixIcon: const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
-                        suffixText: 'Poin',
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: primaryColor, width: 2),
-                        ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _isLoading ? null : _submit,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Icon(_isEdit ? Icons.check_circle_rounded : Icons.save_rounded, size: 18),
+                      label: Text(
+                        _isLoading
+                            ? 'Menyimpan...'
+                            : (_isEdit ? 'Perbarui Anggota' : 'Simpan Anggota'),
                       ),
                     ),
                   ],
-
-                  const SizedBox(height: 24),
-
-                  // ── ACTION BUTTONS ──────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                          side: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _submit,
-                        icon: _isLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : Icon(_isEdit ? Icons.check_circle_rounded : Icons.save_rounded, size: 18, color: Colors.white),
-                        label: Text(
-                          _isLoading ? 'Menyimpan...' : (_isEdit ? 'Perbarui Anggota' : 'Simpan Anggota'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          elevation: 0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

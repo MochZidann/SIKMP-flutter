@@ -128,264 +128,195 @@ class _SupplierFormDialogState extends State<SupplierFormDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      elevation: 12,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 480),
+        padding: const EdgeInsets.all(22),
+        child: SingleChildScrollView(
           child: Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── HEADER ──────────────────────────────────────────
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _isEdit ? Icons.edit_note_rounded : Icons.local_shipping_rounded,
-                          color: primaryColor,
-                          size: 24,
-                        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── HEADER DIALOG ──────────────────────────────────────
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _isEdit ? 'Edit Rekanan Supplier' : 'Tambah Rekanan Supplier Baru',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _isEdit
-                                  ? 'Perbarui data vendor rekanan pasokan'
-                                  : 'Daftarkan vendor pemasok barang masuk / retur',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: Icon(
+                        _isEdit ? Icons.edit_note_rounded : Icons.add_business_rounded,
+                        color: primaryColor,
+                        size: 24,
                       ),
-                      IconButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        color: Colors.grey.shade500,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-
-                  // ── NAMA SUPPLIER ────────────────────────────────────
-                  _buildFieldLabel('Nama Supplier / Perusahaan *'),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration(
-                      hint: 'Contoh: PT. Sumber Makmur Abadi',
-                      prefixIcon: Icons.business_outlined,
-                      primaryColor: primaryColor,
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Nama supplier wajib diisi';
-                      }
-                      if (v.trim().length < 2) {
-                        return 'Nama supplier minimal 2 karakter';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // ── NAMA PIC / KONTAK ────────────────────────────────
-                  _buildFieldLabel('Nama PIC / Penanggung Jawab'),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _picController,
-                    decoration: _inputDecoration(
-                      hint: 'Contoh: Bpk. Budi Santoso',
-                      prefixIcon: Icons.person_outline_rounded,
-                      primaryColor: primaryColor,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isEdit ? 'Edit Data Rekanan' : 'Tambah Rekanan Supplier Baru',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            _isEdit ? 'Perbarui informasi vendor rekanan' : 'Daftarkan vendor pemasok barang ke koperasi',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // ── TELEPON & EMAIL ──────────────────────────────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildFieldLabel('No. Telepon / WA'),
-                            const SizedBox(height: 6),
-                            TextFormField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              decoration: _inputDecoration(
-                                hint: '08123456789',
-                                prefixIcon: Icons.phone_outlined,
-                                primaryColor: primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildFieldLabel('Email'),
-                            const SizedBox(height: 6),
-                            TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: _inputDecoration(
-                                hint: 'vendor@domain.com',
-                                prefixIcon: Icons.email_outlined,
-                                primaryColor: primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // ── ALAMAT KANTOR / GUDANG ───────────────────────────
-                  _buildFieldLabel('Alamat Kantor / Gudang'),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _addressController,
-                    maxLines: 2,
-                    decoration: _inputDecoration(
-                      hint: 'Alamat lengkap distributor / kantor...',
-                      prefixIcon: Icons.location_on_outlined,
-                      primaryColor: primaryColor,
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
                     ),
-                  ),
-                  const SizedBox(height: 14),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
 
-                  // ── CATATAN / KETERANGAN ─────────────────────────────
-                  _buildFieldLabel('Catatan / Keterangan'),
-                  const SizedBox(height: 6),
-                  TextFormField(
-                    controller: _noteController,
-                    maxLines: 2,
-                    decoration: _inputDecoration(
-                      hint: 'Contoh: Jadwal pasokan setiap hari Senin',
-                      prefixIcon: Icons.notes_rounded,
-                      primaryColor: primaryColor,
+                // ── NAMA PERUSAHAAN / SUPPLIER ─────────────────────────
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Supplier / Perusahaan *',
+                    hintText: 'Contoh: PT. Sumber Makmur Abadi',
+                    prefixIcon: const Icon(Icons.business_rounded, color: primaryColor, size: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Nama supplier wajib diisi';
+                    }
+                    if (v.trim().length < 2) {
+                      return 'Nama supplier minimal 2 karakter';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // ── NAMA PIC / KONTAK ──────────────────────────────────
+                TextFormField(
+                  controller: _picController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Nama PIC / Kontak',
+                    hintText: 'Contoh: Bpk. Budi Santoso',
+                    prefixIcon: const Icon(Icons.person_outline_rounded, color: primaryColor, size: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // ── TELEPON & EMAIL (2 KOLOM SEJAJAR RAPI) ─────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: 'No. Telepon / WA',
+                          hintText: '08123456789',
+                          prefixIcon: const Icon(Icons.phone_outlined, color: primaryColor, size: 20),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email Supplier',
+                          hintText: 'vendor@domain.com',
+                          prefixIcon: const Icon(Icons.email_outlined, color: primaryColor, size: 20),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
 
-                  // ── AKSI TOMBOL SIMPAN & BATAL ───────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: _isLoading ? null : () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade700,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                        ),
-                        child: const Text('Batal', style: TextStyle(fontWeight: FontWeight.w600)),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        ),
-                        icon: _isLoading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.save_rounded, size: 18),
-                        label: Text(
-                          _isLoading ? 'Menyimpan...' : (_isEdit ? 'Simpan Perubahan' : 'Simpan Supplier'),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                // ── ALAMAT KANTOR / GUDANG ─────────────────────────────
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'Alamat Kantor / Gudang',
+                    hintText: 'Alamat lengkap distributor / pabrik...',
+                    prefixIcon: const Icon(Icons.location_on_outlined, color: primaryColor, size: 20),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 14),
+
+                // ── CATATAN / KETERANGAN ───────────────────────────────
+                TextFormField(
+                  controller: _noteController,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'Catatan / Keterangan',
+                    hintText: 'Contoh: Jadwal pasokan rutin setiap Senin',
+                    prefixIcon: const Icon(Icons.notes_rounded, color: primaryColor, size: 20),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── ACTION BUTTONS ─────────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      child: const Text('Batal'),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _isLoading ? null : _submit,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_rounded, size: 18),
+                      label: Text(
+                        _isLoading
+                            ? 'Menyimpan...'
+                            : (_isEdit ? 'Simpan Perubahan' : 'Simpan Supplier'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFieldLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        color: Color(0xFF475569),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    required IconData prefixIcon,
-    required Color primaryColor,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(fontSize: 12.5, color: Colors.grey.shade400),
-      prefixIcon: Icon(prefixIcon, size: 18, color: Colors.grey.shade500),
-      filled: true,
-      fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: primaryColor, width: 1.8),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.red),
       ),
     );
   }
