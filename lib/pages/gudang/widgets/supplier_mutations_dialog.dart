@@ -57,7 +57,7 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF7C3AED);
+    const primaryColor = Color(0xFFE65100);
 
     final totalIn = _summary['totalIn'] ?? 0;
     final totalOut = _summary['totalOut'] ?? 0;
@@ -69,19 +69,15 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 720),
+        constraints: const BoxConstraints(maxWidth: 540, maxHeight: 680),
         child: Column(
           children: [
-            // ── TOP HEADER WITH PURPLE GRADIENT ────────────────────────
+            // ── TOP HEADER (BERSIH & PROFESIONAL TEMA GUDANG) ───────────
             Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF581C87), Color(0xFF312E81)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,155 +88,76 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.history_edu_rounded, color: Colors.white, size: 24),
+                        child: const Icon(Icons.history_rounded, color: Colors.white, size: 22),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                if (widget.supplier.code.isNotEmpty) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      widget.supplier.code,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                                Expanded(
-                                  child: Text(
-                                    widget.supplier.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
                             Text(
-                              'PIC: ${widget.supplier.contactPerson ?? "-"} | Telp: ${widget.supplier.phone ?? "-"}',
-                              style: TextStyle(
-                                color: Colors.purple.shade100,
-                                fontSize: 12,
+                              widget.supplier.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            if (widget.supplier.address != null && widget.supplier.address!.isNotEmpty) ...[
-                              const SizedBox(height: 2),
+                            const SizedBox(height: 3),
+                            if (widget.supplier.contactPerson != null && widget.supplier.contactPerson!.isNotEmpty)
                               Text(
-                                widget.supplier.address!,
-                                style: TextStyle(
-                                  color: Colors.purple.shade200,
-                                  fontSize: 11,
+                                'PIC: ${widget.supplier.contactPerson}  •  Telp: ${widget.supplier.phone ?? "-"}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF94A3B8),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ],
                           ],
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                        icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
                         visualDensity: VisualDensity.compact,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-                  // ── 3 SUMMARY METRIC BOXES ─────────────────────────
+                  // ── 3 KOTAK KPI RINGKASAN REKANAN ──────────────────────
                   Row(
                     children: [
-                      // Total Masuk
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('TOTAL MASUK', style: TextStyle(color: Color(0xFF6EE7B7), fontSize: 9, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text('+$totalIn', style: const TextStyle(color: Color(0xFF34D399), fontSize: 16, fontWeight: FontWeight.bold)),
-                              const Text('Barang masuk', style: TextStyle(color: Colors.white70, fontSize: 9)),
-                            ],
-                          ),
+                        child: _buildHeaderKpi(
+                          label: 'TOTAL MASUK',
+                          value: '+$totalIn',
+                          sub: 'Barang pasokan',
+                          color: const Color(0xFF34D399),
                         ),
                       ),
                       const SizedBox(width: 8),
-
-                      // Total Retur
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('TOTAL RETUR', style: TextStyle(color: Color(0xFFFDA4AF), fontSize: 9, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text('-$totalOut', style: const TextStyle(color: Color(0xFFFB7185), fontSize: 16, fontWeight: FontWeight.bold)),
-                              const Text('Dikembalikan', style: TextStyle(color: Colors.white70, fontSize: 9)),
-                            ],
-                          ),
+                        child: _buildHeaderKpi(
+                          label: 'TOTAL RETUR',
+                          value: '-$totalOut',
+                          sub: 'Dikembalikan',
+                          color: const Color(0xFFFB7185),
                         ),
                       ),
                       const SizedBox(width: 8),
-
-                      // Netto
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('NETTO PASOKAN', style: TextStyle(color: Color(0xFFFDE68A), fontSize: 9, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${net >= 0 ? '+' : ''}$net',
-                                style: TextStyle(
-                                  color: net >= 0 ? const Color(0xFFFBBF24) : const Color(0xFFF87171),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Text('Saldo di gudang', style: TextStyle(color: Colors.white70, fontSize: 9)),
-                            ],
-                          ),
+                        child: _buildHeaderKpi(
+                          label: 'NETTO PASOKAN',
+                          value: '${net >= 0 ? "+" : ""}$net',
+                          sub: 'Saldo di gudang',
+                          color: Colors.amberAccent,
                         ),
                       ),
                     ],
@@ -249,30 +166,29 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
               ),
             ),
 
-            // ── FILTER TABS ──────────────────────────────────────────
+            // ── FILTER TAB BAR (SEMUA, MASUK, RETUR) ────────────────────
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: const Color(0xFFF8FAFC),
               child: Row(
                 children: [
-                  _buildFilterChip('Semua Transaksi', 'ALL'),
+                  _buildFilterChip('Semua Transaksi', 'ALL', primaryColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Masuk (IN)', 'IN', activeColor: const Color(0xFF059669)),
+                  _buildFilterChip('Masuk (IN)', 'IN', const Color(0xFF059669)),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Retur (OUT)', 'OUT', activeColor: const Color(0xFFE11D48)),
+                  _buildFilterChip('Retur (OUT)', 'OUT', const Color(0xFFE11D48)),
                 ],
               ),
             ),
             const Divider(height: 1),
 
-            // ── LIST OF MUTATIONS ────────────────────────────────────
+            // ── DAFTAR RIWAYAT MUTASI DENGAN ZERO OVERFLOW ──────────────
             Expanded(
               child: _isLoading
-                  ? ListView.separated(
+                  ? ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: 4,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (_, _) => const SkeletonTransactionTile(),
+                      itemBuilder: (_, _) => const SkeletonProductTile(),
                     )
                   : _mutations.isEmpty
                       ? EmptyDataView(
@@ -310,7 +226,7 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // IN/OUT Icon
+                                    // Ikon Masuk / Keluar
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
@@ -321,14 +237,14 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                                         ),
                                       ),
                                       child: Icon(
-                                        isIn ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                        size: 18,
+                                        isIn ? Icons.south_west_rounded : Icons.north_east_rounded,
+                                        size: 16,
                                         color: isIn ? const Color(0xFF059669) : const Color(0xFFE11D48),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
 
-                                    // Mutation details
+                                    // Detail mutasi barang
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,9 +253,11 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                                             item.productName,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 14,
+                                              fontSize: 13.5,
                                               color: Color(0xFF1E293B),
                                             ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                           if (item.barcode != null && item.barcode!.isNotEmpty) ...[
                                             const SizedBox(height: 2),
@@ -350,52 +268,46 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                                                 fontSize: 11,
                                                 color: Colors.grey.shade600,
                                               ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                           if (item.note != null && item.note!.isNotEmpty) ...[
-                                            const SizedBox(height: 3),
+                                            const SizedBox(height: 2),
                                             Text(
                                               'Catatan: ${item.note}',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: Colors.grey.shade500,
+                                                color: Colors.grey.shade600,
                                                 fontStyle: FontStyle.italic,
                                               ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                           const SizedBox(height: 4),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                DateHelper.formatEpochMs(item.createdAtEpochMs),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey.shade400,
-                                                ),
-                                              ),
-                                              if (item.userName != null && item.userName!.isNotEmpty) ...[
-                                                Text(' • ', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-                                                Text(
-                                                  'Petugas: ${item.userName}',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.grey.shade500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
+                                          // Baris tanggal & petugas yang tidak akan overflow
+                                          Text(
+                                            '${DateHelper.formatEpochMs(item.createdAtEpochMs)}'
+                                            '${item.userName != null && item.userName!.isNotEmpty ? " • Petugas: ${item.userName}" : ""}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey.shade400,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ],
                                       ),
                                     ),
                                     const SizedBox(width: 8),
 
-                                    // Delta Quantity Badge
+                                    // Badge kuantitas delta
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: isIn ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: isIn ? const Color(0xFFA7F3D0) : const Color(0xFFFECDD3),
                                         ),
@@ -403,7 +315,7 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
                                       child: Text(
                                         '${isIn ? "+" : ""}${item.quantityDelta} unit',
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11.5,
                                           fontWeight: FontWeight.bold,
                                           color: isIn ? const Color(0xFF047857) : const Color(0xFFBE123C),
                                         ),
@@ -422,7 +334,56 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
     );
   }
 
-  Widget _buildFilterChip(String label, String value, {Color activeColor = const Color(0xFF7C3AED)}) {
+  Widget _buildHeaderKpi({
+    required String label,
+    required String value,
+    required String sub,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF94A3B8),
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            sub,
+            style: const TextStyle(
+              fontSize: 9,
+              color: Color(0xFF94A3B8),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, Color activeColor) {
     final isSelected = _selectedFilter == value;
 
     return InkWell(
@@ -441,22 +402,13 @@ class _SupplierMutationsDialogState extends State<SupplierMutationsDialog> {
           border: Border.all(
             color: isSelected ? activeColor : Colors.grey.shade300,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.25),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey.shade700,
+            color: isSelected ? Colors.white : const Color(0xFF475569),
           ),
         ),
       ),

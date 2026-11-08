@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/app_skeleton.dart';
+import '../../core/widgets/app_top_bar_title.dart';
 import '../../core/widgets/empty_data_view.dart';
 import '../../models/sale_return.dart';
 import '../../services/return_service.dart';
+import '../pos/widgets/pos_closing_sheet.dart';
 import '../pos/widgets/return_detail_sheet.dart';
 import '../pos/widgets/return_form_sheet.dart';
 
@@ -76,6 +78,19 @@ class ReturTabState extends State<ReturTab> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: primaryKasir,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        title: const AppTopBarTitle(roleName: 'Kasir'),
+        actions: [
+          IconButton(
+            tooltip: 'Tutup Kasir / Closing Shift',
+            icon: const Icon(Icons.storefront_rounded),
+            onPressed: () => PosClosingSheet.show(context, onClosingSuccess: reload),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // ── KPI METRIK SUMMARY CARDS ───────────────────────────────────

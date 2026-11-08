@@ -385,6 +385,67 @@ class GudangService {
     }
   }
 
+  /// Menambahkan kategori baru
+  Future<Map<String, dynamic>> createCategory(String name) async {
+    try {
+      final uri = Uri.parse('$gudangBaseUrl/categories');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: json.encode({'name': name.trim()}),
+      ).timeout(const Duration(seconds: 8));
+
+      final data = json.decode(response.body);
+      return {
+        'success': response.statusCode == 201 || response.statusCode == 200,
+        'message': data['message'] ?? 'Kategori berhasil disimpan',
+        'data': data['data'],
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Gagal menambahkan kategori: $e'};
+    }
+  }
+
+  /// Memperbarui nama kategori
+  Future<Map<String, dynamic>> updateCategory(int id, String name) async {
+    try {
+      final uri = Uri.parse('$gudangBaseUrl/categories/$id');
+      final response = await http.put(
+        uri,
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: json.encode({'name': name.trim()}),
+      ).timeout(const Duration(seconds: 8));
+
+      final data = json.decode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': data['message'] ?? 'Kategori berhasil diperbarui',
+        'data': data['data'],
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Gagal memperbarui kategori: $e'};
+    }
+  }
+
+  /// Menghapus kategori
+  Future<Map<String, dynamic>> deleteCategory(int id) async {
+    try {
+      final uri = Uri.parse('$gudangBaseUrl/categories/$id');
+      final response = await http.delete(
+        uri,
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 8));
+
+      final data = json.decode(response.body);
+      return {
+        'success': response.statusCode == 200,
+        'message': data['message'] ?? 'Kategori berhasil dihapus',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Gagal menghapus kategori: $e'};
+    }
+  }
+
   /// Menghitung ringkasan inventaris untuk dashboard secara efisien
   Future<Map<String, dynamic>> getInventoryStats() async {
     try {

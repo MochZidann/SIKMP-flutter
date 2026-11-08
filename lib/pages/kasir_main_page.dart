@@ -121,115 +121,69 @@ class _KasirMainPageState extends State<KasirMainPage> {
             ),
           ],
         ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
             height: 64,
-            child: Row(
-              children: [
-                // 1. Dashboard
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.dashboard_outlined,
-                  selectedIcon: Icons.dashboard_rounded,
-                  label: 'Dashboard',
-                  iconSize: 22,
-                ),
-                // 2. POS
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.point_of_sale_outlined,
-                  selectedIcon: Icons.point_of_sale_rounded,
-                  label: 'POS',
-                  iconSize: 22,
-                ),
-                // 3. Produk
-                _buildNavItem(
-                  index: 2,
-                  icon: Icons.inventory_2_outlined,
-                  selectedIcon: Icons.inventory_2_rounded,
-                  label: 'Produk',
-                  iconSize: 22,
-                ),
-                // 4. Penjualan
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.receipt_long_outlined,
-                  selectedIcon: Icons.receipt_long_rounded,
-                  label: 'Penjualan',
-                  iconSize: 22,
-                ),
-                // 5. Retur
-                _buildNavItem(
-                  index: 4,
-                  icon: Icons.assignment_return_outlined,
-                  selectedIcon: Icons.assignment_return_rounded,
-                  label: 'Retur',
-                  iconSize: 22,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    String? assetPath,
-    IconData? icon,
-    IconData? selectedIcon,
-    required String label,
-    double iconSize = 24.0,
-  }) {
-    final isSelected = _currentIndex == index;
-    const primaryColor = Color(0xFFD32F2F);
-    final unselectedColor = Colors.grey.shade600;
-
-    return Expanded(
-      child: InkWell(
-        onTap: () => _onTabTapped(index),
-        splashColor: primaryColor.withValues(alpha: 0.1),
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: 28,
-              child: Center(
-                child: assetPath != null
-                    ? Image.asset(
-                        assetPath,
-                        width: iconSize,
-                        height: iconSize,
-                        color: isSelected ? primaryColor : unselectedColor,
-                        colorBlendMode: BlendMode.srcIn,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          isSelected ? (selectedIcon ?? icon ?? Icons.circle) : (icon ?? Icons.circle),
-                          color: isSelected ? primaryColor : unselectedColor,
-                          size: 24,
-                        ),
-                      )
-                    : Icon(
-                        isSelected ? (selectedIcon ?? icon) : icon,
-                        color: isSelected ? primaryColor : unselectedColor,
-                        size: iconSize,
-                      ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+            backgroundColor: Colors.white,
+            indicatorColor: const Color(0xFFD32F2F).withValues(alpha: 0.12),
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD32F2F),
+                );
+              }
+              return TextStyle(
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? primaryColor : unselectedColor,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              );
+            }),
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(
+                  color: Color(0xFFD32F2F),
+                  size: 22,
+                );
+              }
+              return IconThemeData(
+                color: Colors.grey.shade600,
+                size: 22,
+              );
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: _onTabTapped,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard_rounded),
+                label: 'Dashboard',
               ),
-            ),
-          ],
+              NavigationDestination(
+                icon: Icon(Icons.point_of_sale_outlined),
+                selectedIcon: Icon(Icons.point_of_sale_rounded),
+                label: 'POS',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2_rounded),
+                label: 'Produk',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long_rounded),
+                label: 'Penjualan',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.assignment_return_outlined),
+                selectedIcon: Icon(Icons.assignment_return_rounded),
+                label: 'Retur',
+              ),
+            ],
+          ),
         ),
       ),
     );

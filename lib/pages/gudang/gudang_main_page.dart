@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
 import '../../services/auth_service.dart';
 import '../login_page.dart';
-import 'tabs/gudang_category_tab.dart';
 import 'tabs/gudang_dashboard_tab.dart';
 import 'tabs/gudang_inbound_tab.dart';
+import 'tabs/gudang_manage_stock_tab.dart';
 import 'tabs/gudang_stock_tab.dart';
 import 'tabs/gudang_suppliers_tab.dart';
 
@@ -85,7 +85,7 @@ class _GudangMainPageState extends State<GudangMainPage> {
           GudangDashboardTab(onNavigateTab: _onTabTapped),
           const GudangStockTab(),
           const GudangInboundTab(),
-          const GudangCategoryTab(),
+          const GudangManageStockTab(),
           const GudangSuppliersTab(),
         ],
       ),
@@ -156,10 +156,10 @@ class _GudangMainPageState extends State<GudangMainPage> {
                 tooltip: 'Riwayat Mutasi Stok',
               ),
               NavigationDestination(
-                icon: Icon(Icons.category_outlined),
-                selectedIcon: Icon(Icons.category_rounded),
-                label: 'Kategori',
-                tooltip: 'Daftar Kategori Produk',
+                icon: Icon(Icons.tune_outlined),
+                selectedIcon: Icon(Icons.tune_rounded),
+                label: 'Kelola Stok',
+                tooltip: 'Atur Barang Masuk, Keluar & Opname',
               ),
               NavigationDestination(
                 icon: Icon(Icons.local_shipping_outlined),

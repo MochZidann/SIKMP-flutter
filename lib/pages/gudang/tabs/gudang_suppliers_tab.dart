@@ -150,7 +150,7 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(result['message'] ?? 'Supplier berhasil dihapus'),
-                      backgroundColor: const Color(0xFF7C3AED),
+                      backgroundColor: const Color(0xFFE65100),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -180,7 +180,7 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF7C3AED);
+    const primaryColor = Color(0xFFE65100);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -196,7 +196,7 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
       ),
       body: Column(
         children: [
-          // ── METRIC CARDS HEADER (MATCHING WEB) ─────────────────────────
+          // ── METRIC CARDS HEADER ─────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             color: Colors.white,
@@ -209,23 +209,23 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFAF5FF),
+                          color: const Color(0xFFFFF7ED),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE9D5FF)),
+                          border: Border.all(color: const Color(0xFFFFEDD5)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('SUPPLIER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED))),
-                                Icon(Icons.business_rounded, size: 14, color: Colors.purple.shade400),
+                                Text('SUPPLIER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: primaryColor)),
+                                Icon(Icons.business_rounded, size: 14, color: primaryColor),
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text('$_totalSuppliersCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF581C87))),
-                            const Text('Mitra terdaftar', style: TextStyle(fontSize: 10, color: Color(0xFF9333EA))),
+                            Text('$_totalSuppliersCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF9A3412))),
+                            const Text('Mitra terdaftar', style: TextStyle(fontSize: 10, color: Color(0xFFC2410C))),
                           ],
                         ),
                       ),
@@ -394,41 +394,15 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Row(
-                                              children: [
-                                                if (s.code.isNotEmpty) ...[
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.purple.shade50,
-                                                      borderRadius: BorderRadius.circular(6),
-                                                      border: Border.all(color: Colors.purple.shade200),
-                                                    ),
-                                                    child: Text(
-                                                      s.code,
-                                                      style: TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        fontSize: 10,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.purple.shade800,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                ],
-                                                Expanded(
-                                                  child: Text(
-                                                    s.name,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 14,
-                                                      color: Color(0xFF1E293B),
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
+                                            Text(
+                                              s.name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14.5,
+                                                color: Color(0xFF1E293B),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 4),
                                             Row(
@@ -538,21 +512,21 @@ class _GudangSuppliersTabState extends State<GudangSuppliersTab> {
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                               decoration: BoxDecoration(
-                                                color: Colors.purple.shade50,
+                                                color: const Color(0xFFFFF7ED),
                                                 borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.purple.shade200),
+                                                border: Border.all(color: const Color(0xFFFFEDD5)),
                                               ),
-                                              child: Row(
+                                              child: const Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(Icons.history_rounded, size: 15, color: Colors.purple.shade700),
-                                                  const SizedBox(width: 4),
+                                                  Icon(Icons.history_rounded, size: 15, color: primaryColor),
+                                                  SizedBox(width: 4),
                                                   Text(
                                                     'Mutasi',
                                                     style: TextStyle(
                                                       fontSize: 11,
                                                       fontWeight: FontWeight.bold,
-                                                      color: Colors.purple.shade700,
+                                                      color: primaryColor,
                                                     ),
                                                   ),
                                                 ],
