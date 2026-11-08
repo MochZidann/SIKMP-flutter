@@ -32,7 +32,7 @@ class DashboardTabState extends State<DashboardTab> {
 
   /// Memuat ulang statistik dashboard kasir dari server
   Future<void> reload() async {
-    await _loadDashboardData();
+    await _loadDashboardData(silent: true);
   }
 
   @override
@@ -41,8 +41,10 @@ class DashboardTabState extends State<DashboardTab> {
     _loadDashboardData();
   }
 
-  Future<void> _loadDashboardData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadDashboardData({bool silent = false}) async {
+    if (!silent) {
+      setState(() => _isLoading = true);
+    }
     final user = AuthService().currentUser;
     final result = await _posService.getSales(
       cashierId: user?.id,

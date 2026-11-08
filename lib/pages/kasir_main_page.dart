@@ -43,25 +43,6 @@ class _KasirMainPageState extends State<KasirMainPage> {
     setState(() {
       _currentIndex = index;
     });
-
-    // Otomatis sinkronkan data saat kasir berpindah tab agar selalu mutakhir
-    switch (index) {
-      case 0:
-        _dashboardKey.currentState?.reload();
-        break;
-      case 1:
-        _posKey.currentState?.reloadProducts();
-        break;
-      case 2:
-        _produkKey.currentState?.reload();
-        break;
-      case 3:
-        _penjualanKey.currentState?.reload();
-        break;
-      case 4:
-        _returKey.currentState?.reload();
-        break;
-    }
   }
 
   /// Aksi Scan Barcode Kamera Kasir (Mode Beruntun / Banyak Barang)

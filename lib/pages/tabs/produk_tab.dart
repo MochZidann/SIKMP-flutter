@@ -31,7 +31,7 @@ class ProdukTabState extends State<ProdukTab> {
 
   /// Memuat ulang daftar produk dari server
   Future<void> reload() async {
-    await _loadProducts();
+    await _loadProducts(silent: true);
   }
 
   @override
@@ -46,8 +46,10 @@ class ProdukTabState extends State<ProdukTab> {
     super.dispose();
   }
 
-  Future<void> _loadProducts() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadProducts({bool silent = false}) async {
+    if (!silent) {
+      setState(() => _isLoading = true);
+    }
     final prods = await _posService.getProducts();
     if (mounted) {
       setState(() {

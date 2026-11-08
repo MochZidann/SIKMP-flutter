@@ -36,8 +36,10 @@ class ReturTabState extends State<ReturTab> {
     super.dispose();
   }
 
-  Future<void> loadReturns() async {
-    setState(() => _isLoading = true);
+  Future<void> loadReturns({bool silent = false}) async {
+    if (!silent) {
+      setState(() => _isLoading = true);
+    }
     final res = await _returnService.getReturns(
       search: _searchController.text.trim(),
       reason: _selectedReason,
@@ -56,7 +58,7 @@ class ReturTabState extends State<ReturTab> {
   }
 
   void reload() {
-    loadReturns();
+    loadReturns(silent: true);
   }
 
   void _openReturnForm() {

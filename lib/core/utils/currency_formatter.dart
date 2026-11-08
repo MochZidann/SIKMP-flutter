@@ -13,5 +13,8 @@ String formatRupiah(num? amount) {
 }
 
 class CurrencyHelper {
-  static String formatRupiah(num? amount) => formatRupiah(amount);
+  static String formatRupiah(num? amount) {
+    if (amount == null) return 'Rp 0';
+    return _rupiahFormat.format(amount);
+  }
 }

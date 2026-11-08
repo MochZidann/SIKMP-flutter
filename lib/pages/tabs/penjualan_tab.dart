@@ -28,7 +28,7 @@ class PenjualanTabState extends State<PenjualanTab> {
 
   /// Memuat ulang riwayat penjualan kasir dari server
   Future<void> reload() async {
-    await _loadSales();
+    await _loadSales(silent: true);
   }
 
   // ── FITUR DATEPICKER & TIMEPICKER ──
@@ -44,8 +44,10 @@ class PenjualanTabState extends State<PenjualanTab> {
     _loadSales();
   }
 
-  Future<void> _loadSales() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadSales({bool silent = false}) async {
+    if (!silent) {
+      setState(() => _isLoading = true);
+    }
     final user = AuthService().currentUser;
     String? dateParam;
 
