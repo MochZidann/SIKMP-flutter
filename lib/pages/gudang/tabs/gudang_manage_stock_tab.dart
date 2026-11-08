@@ -522,7 +522,7 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
               // 1. + Barang Masuk (Pasokan)
               Expanded(
                 child: _buildStockButton(
-                  label: '+ Masuk',
+                  label: 'Masuk',
                   icon: Icons.add_rounded,
                   color: const Color(0xFF059669),
                   bgColor: const Color(0xFFECFDF5),
@@ -542,7 +542,7 @@ class _GudangManageStockTabState extends State<GudangManageStockTab> {
               // 2. − Barang Keluar (Retur / Rusak)
               Expanded(
                 child: _buildStockButton(
-                  label: '− Keluar',
+                  label: 'Keluar',
                   icon: Icons.remove_rounded,
                   color: const Color(0xFFE11D48),
                   bgColor: const Color(0xFFFFF1F2),
