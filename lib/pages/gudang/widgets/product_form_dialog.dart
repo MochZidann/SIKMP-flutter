@@ -48,6 +48,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _categoryCtrl;
   late final TextEditingController _priceCtrl;
+  late final TextEditingController _memberPriceCtrl;
   late final TextEditingController _purchasePriceCtrl;
   late final TextEditingController _stockCtrl;
 
@@ -79,6 +80,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _nameCtrl = TextEditingController(text: p?.name ?? '');
     _categoryCtrl = TextEditingController(text: p?.category ?? 'Umum');
     _priceCtrl = TextEditingController(text: p != null ? p.price.toString() : '');
+    _memberPriceCtrl = TextEditingController(text: (p?.memberPrice != null && p!.memberPrice! > 0) ? p.memberPrice.toString() : '');
     _purchasePriceCtrl = TextEditingController(text: p != null ? p.purchasePrice.toString() : '');
     _stockCtrl = TextEditingController(text: p != null ? p.stock.toString() : '0');
     _showInPos = true;
@@ -109,6 +111,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _nameCtrl.dispose();
     _categoryCtrl.dispose();
     _priceCtrl.dispose();
+    _memberPriceCtrl.dispose();
     _purchasePriceCtrl.dispose();
     _stockCtrl.dispose();
     super.dispose();
@@ -348,6 +351,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
 
     final currentUserId = AuthService().currentUser?.id;
     final price = int.tryParse(_priceCtrl.text.trim()) ?? 0;
+    final memberPriceText = _memberPriceCtrl.text.trim();
+    final memberPrice = memberPriceText.isNotEmpty ? int.tryParse(memberPriceText) : null;
     final purchasePrice = int.tryParse(_purchasePriceCtrl.text.trim()) ?? 0;
     // Pada mode edit, stok dipertahankan dari data asli (tidak diubah langsung)
     final stock = _isEdit
@@ -360,6 +365,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       barcode: _barcodeCtrl.text.trim().isNotEmpty ? _barcodeCtrl.text.trim() : null,
       category: _categoryCtrl.text.trim().isNotEmpty ? _categoryCtrl.text.trim() : 'Umum',
       price: price,
+      memberPrice: memberPrice,
       purchasePrice: purchasePrice,
       stock: stock,
       minimumStock: widget.product?.minimumStock ?? 5,
@@ -619,6 +625,54 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 14),
+
+                // ── HARGA KHUSUS MEMBER (DISKON ANGGOTA) ──
+                TextFormField(
+                  controller: _memberPriceCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Harga Khusus Member (Rp)',
+                    hintText: 'Opsional (contoh: lebih murah Rp 1.500)',
+                    helperText: 'Kosongkan jika sama dengan harga normal. Otomatis diterapkan saat transaksi anggota.',
+                    helperMaxLines: 2,
+                    prefixIcon: const Icon(Icons.loyalty_rounded, color: Color(0xFF7C3AED), size: 20),
+                    suffixIcon: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEDE9FE),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFDDD6FE)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.stars_rounded, size: 14, color: Color(0xFF7C3AED)),
+                          SizedBox(width: 4),
+                          Text(
+                            'Diskon Member',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF7C3AED),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFDDD6FE)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
                 ),
                 // ── JUMLAH STOK AWAL & SUPPLIER (HANYA SAAT TAMBAH BARANG BARU) ──
                 if (!_isEdit) ...[

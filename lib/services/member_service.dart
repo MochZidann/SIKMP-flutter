@@ -123,6 +123,25 @@ class MemberService {
     }
   }
 
+  /// Mengambil detail lengkap anggota termasuk ringkasan poin, kelompok kedaluwarsa, dan riwayat transaksi
+  Future<Map<String, dynamic>?> getMemberDetail(int id) async {
+    try {
+      final uri = Uri.parse('$baseUrl/$id');
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        if (decoded['success'] == true && decoded['data'] != null) {
+          return Map<String, dynamic>.from(decoded['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('MemberService getMemberDetail error: $e');
+      return null;
+    }
+  }
+
   /// Menghapus anggota dari sistem
   Future<Map<String, dynamic>> deleteMember(int id) async {
     try {

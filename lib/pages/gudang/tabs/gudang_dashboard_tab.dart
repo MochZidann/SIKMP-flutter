@@ -5,6 +5,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../core/widgets/header_curve_clipper.dart';
+import '../../../models/product.dart';
 import '../../../models/stock_movement.dart';
 import '../../../services/gudang_service.dart';
 import '../widgets/product_form_dialog.dart';
@@ -180,6 +181,8 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
     final todayMovements = _stats['todayMovements'] ?? 0;
     final recentMovements = _stats['recentMovements'] as List<StockMovement>? ?? [];
     final displayedMovements = recentMovements.take(5).toList();
+    final restockAlerts = _stats['restockAlerts'] as List<Product>? ?? [];
+    final displayedRestocks = restockAlerts.take(5).toList();
 
     return RefreshIndicator(
       color: const Color(0xFFE65100),
@@ -478,8 +481,257 @@ class _GudangDashboardTabState extends State<GudangDashboardTab> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
+            // ── PERINGATAN RESTOCK (5 PRODUK TERATAS PALING KRITIS) ─────
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Peringatan Restock',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1E293B),
+                                      ),
+                                    ),
+                                    if (lowStockCount > 0) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: Colors.red.shade200),
+                                        ),
+                                        child: Text(
+                                          '$lowStockCount item',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 1),
+                                const Text(
+                                  '5 stok teratas paling kritis',
+                                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () => widget.onNavigateTab?.call(1),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Lihat Semua →',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+
+                  // Content
+                  if (displayedRestocks.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 28),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Semua stok aman!',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Tidak ada produk yang perlu restock saat ini.',
+                              style: TextStyle(fontSize: 11, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: displayedRestocks.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1, indent: 16, endIndent: 16),
+                      itemBuilder: (context, idx) {
+                        final item = displayedRestocks[idx];
+                        final deficit = item.minimumStock - item.stock;
+                        final isCritical = item.stock <= 0;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.name,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1E293B),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '#${item.barcode ?? '-'}  •  Min: ${item.minimumStock} unit',
+                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Stok & Defisit
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${item.stock}',
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w900,
+                                          color: isCritical ? Colors.red.shade700 : Colors.amber.shade900,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '(-$deficit)',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: isCritical ? Colors.red.shade50 : Colors.amber.shade50,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: isCritical ? Colors.red.shade200 : Colors.amber.shade200,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      isCritical ? 'Habis' : 'Kritis',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: isCritical ? Colors.red.shade700 : Colors.amber.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 10),
+                              // Quick Restock Button
+                              InkWell(
+                                onTap: () {
+                                  StockInDialog.show(
+                                    context,
+                                    product: item,
+                                    onStockUpdated: _loadDashboardData,
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE65100).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    '+ Restock',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFE65100),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // ── RECENT MUTATIONS LIST ───────────────────────────────────
             Row(

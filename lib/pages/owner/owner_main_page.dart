@@ -5,6 +5,7 @@ import '../login_page.dart';
 import 'tabs/owner_dashboard_tab.dart';
 import 'tabs/owner_inventory_tab.dart';
 import 'tabs/owner_sales_tab.dart';
+import 'tabs/owner_shifts_tab.dart';
 
 class OwnerMainPage extends StatefulWidget {
   final int initialIndex;
@@ -84,6 +85,7 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
           OwnerDashboardTab(onNavigateTab: _onTabTapped),
           const OwnerSalesTab(),
           const OwnerInventoryTab(),
+          const OwnerShiftsTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -151,6 +153,12 @@ class _OwnerMainPageState extends State<OwnerMainPage> {
                 selectedIcon: Icon(Icons.inventory_2_rounded),
                 label: 'Kesehatan Stok',
                 tooltip: 'Valuasi Aset & Stok Kritis',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.badge_outlined),
+                selectedIcon: Icon(Icons.badge_rounded),
+                label: 'Shift Kasir',
+                tooltip: 'Rekonsiliasi Shift Kasir',
               ),
             ],
           ),

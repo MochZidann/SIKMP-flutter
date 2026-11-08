@@ -87,6 +87,8 @@ class PosService {
     int? amountPaid,
     int? cashierId,
     String? promoCode,
+    int? memberId,
+    bool redeemPoints = false,
   }) async {
     try {
       final uri = Uri.parse('$baseUrl/checkout');
@@ -101,6 +103,8 @@ class PosService {
         body['amount'] = amount;
       }
       if (amountPaid != null) body['amountPaid'] = amountPaid;
+      if (memberId != null) body['member_id'] = memberId;
+      if (redeemPoints) body['redeem_points'] = true;
 
       final response = await http.post(
         uri,
@@ -129,6 +133,8 @@ class PosService {
     int? amount,
     String? promoCode,
     int? cashierId,
+    int? memberId,
+    bool redeemPoints = false,
   }) async {
     try {
       final uri = Uri.parse('$baseUrl/qris/generate');
@@ -146,6 +152,8 @@ class PosService {
       } else {
         throw Exception('Nominal atau daftar barang harus diisi.');
       }
+      if (memberId != null) body['member_id'] = memberId;
+      if (redeemPoints) body['redeem_points'] = true;
 
       final response = await http.post(
         uri,

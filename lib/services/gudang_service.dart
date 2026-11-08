@@ -66,11 +66,12 @@ class GudangService {
             : null,
         'category': product.category?.trim() ?? 'Umum',
         'price': product.price,
+        if (product.memberPrice != null) 'member_price': product.memberPrice,
         'purchase_price': product.purchasePrice,
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
         'user_id': currentUserId,
-        'supplier_id': ?supplierId,
+        if (supplierId != null) 'supplier_id': supplierId,
         if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
         if (imageBase64 != null && imageBase64.isNotEmpty) 'image_base64': imageBase64,
       };
@@ -122,6 +123,7 @@ class GudangService {
             : null,
         'category': product.category?.trim() ?? 'Umum',
         'price': product.price,
+        if (product.memberPrice != null) 'member_price': product.memberPrice,
         'purchase_price': product.purchasePrice,
         'stock': product.stock,
         'minimum_stock': product.minimumStock,
@@ -228,7 +230,7 @@ class GudangService {
       final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-in');
       final payload = <String, dynamic>{
         'quantity': quantity,
-        'supplier_id': ?supplierId,
+        if (supplierId != null) 'supplier_id': supplierId,
         if (referenceNo != null && referenceNo.trim().isNotEmpty) 'reference_no': referenceNo.trim(),
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
         'user_id': currentUserId,
@@ -275,7 +277,7 @@ class GudangService {
       final uri = Uri.parse('$gudangBaseUrl/products/${product.id}/stock-out');
       final payload = <String, dynamic>{
         'quantity': quantity,
-        'supplier_id': ?supplierId,
+        if (supplierId != null) 'supplier_id': supplierId,
         if (referenceNo != null && referenceNo.trim().isNotEmpty) 'reference_no': referenceNo.trim(),
         'note': note.trim(),
         'user_id': currentUserId,
@@ -394,6 +396,7 @@ class GudangService {
         if (jsonResp['success'] == true && jsonResp['data'] != null) {
           final data = jsonResp['data'];
           final recentRaw = data['recentMovements'] as List? ?? [];
+          final restockRaw = data['restockAlerts'] as List? ?? [];
           return {
             'totalProducts': data['totalProducts'] ?? 0,
             'lowStockCount': data['lowStockCount'] ?? 0,
@@ -401,6 +404,7 @@ class GudangService {
             'totalValuation': data['totalValuation'] ?? 0,
             'todayMovements': data['todayMovements'] ?? 0,
             'recentMovements': recentRaw.map((e) => StockMovement.fromJson(e)).toList(),
+            'restockAlerts': restockRaw.map((e) => Product.fromJson(e)).toList(),
           };
         }
       }
@@ -425,14 +429,21 @@ class GudangService {
       int outOfStockCount = 0;
       int totalValuation = 0;
 
+      final restockAlerts = <Product>[];
+
       for (final p in products) {
         if (p.isOutOfStock) {
           outOfStockCount++;
-        } else if (p.isLowStock) {
+          restockAlerts.add(p);
+        } else if (p.stock <= p.minimumStock) {
           lowStockCount++;
+          restockAlerts.add(p);
         }
         totalValuation += (p.stock * p.price);
       }
+
+      // Urutkan peringatan restock berdasarkan defisit stok terbesar
+      restockAlerts.sort((a, b) => (b.minimumStock - b.stock).compareTo(a.minimumStock - a.stock));
 
       final now = DateTime.now();
       final startOfDayMs = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
@@ -445,6 +456,7 @@ class GudangService {
         'totalValuation': totalValuation,
         'todayMovements': todayMovements,
         'recentMovements': movements.take(5).toList(),
+        'restockAlerts': restockAlerts.take(5).toList(),
       };
     } catch (e) {
       debugPrint('GudangService _fallbackInventoryStats error: $e');
@@ -455,6 +467,7 @@ class GudangService {
         'totalValuation': 0,
         'todayMovements': 0,
         'recentMovements': <StockMovement>[],
+        'restockAlerts': <Product>[],
       };
     }
   }

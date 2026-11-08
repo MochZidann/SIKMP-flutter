@@ -16,12 +16,20 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
   final GudangService _gudangService = GudangService();
   List<StockMovement> _movements = [];
   bool _isLoading = true;
-  String _selectedType = 'ALL'; // 'ALL', 'IN', 'ADJUST', 'OUT'
+  String _selectedType = 'ALL'; // 'ALL', 'IN', 'OUT', 'ADJUST'
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadMovements();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMovements() async {
@@ -36,8 +44,19 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
   }
 
   List<StockMovement> get _filteredMovements {
-    if (_selectedType == 'ALL') return _movements;
-    return _movements.where((m) => m.type.toUpperCase() == _selectedType).toList();
+    return _movements.where((m) {
+      final matchesType = _selectedType == 'ALL' || m.type.toUpperCase() == _selectedType;
+      if (!matchesType) return false;
+
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      final pName = (m.productName ?? '').toLowerCase();
+      final sName = (m.supplierName ?? '').toLowerCase();
+      final note = (m.note ?? '').toLowerCase();
+      final ref = (m.referenceNo ?? '').toLowerCase();
+
+      return pName.contains(q) || sName.contains(q) || note.contains(q) || ref.contains(q);
+    }).toList();
   }
 
   @override
@@ -46,47 +65,58 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: Column(
         children: [
-          // ── FILTER TIPE MUTASI ─────────────────────────────────────────
+          // ── SEARCH BAR & FILTER MUTASI ────────────────────────────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             color: Colors.white,
-            child: Row(
+            child: Column(
               children: [
-                ChoiceChip(
-                  showCheckmark: false,
-                  label: const Text('Semua Mutasi', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  selected: _selectedType == 'ALL',
-                  selectedColor: const Color(0xFFE65100),
-                  labelStyle: TextStyle(color: _selectedType == 'ALL' ? Colors.white : const Color(0xFF333333)),
-                  backgroundColor: Colors.grey.shade100,
-                  onSelected: (_) => setState(() => _selectedType = 'ALL'),
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                  decoration: InputDecoration(
+                    hintText: 'Cari produk, supplier, atau nomor dokumen...',
+                    hintStyle: TextStyle(fontSize: 12.5, color: Colors.grey.shade400),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF9E9E9E)),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: const Color(0xFFF3F4F6),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  showCheckmark: false,
-                  label: const Text('Masuk (IN)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  selected: _selectedType == 'IN',
-                  selectedColor: Colors.green.shade700,
-                  labelStyle: TextStyle(color: _selectedType == 'IN' ? Colors.white : const Color(0xFF333333)),
-                  backgroundColor: Colors.grey.shade100,
-                  onSelected: (_) => setState(() => _selectedType = 'IN'),
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  showCheckmark: false,
-                  label: const Text('Opname (ADJUST)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  selected: _selectedType == 'ADJUST',
-                  selectedColor: Colors.blueGrey.shade700,
-                  labelStyle: TextStyle(color: _selectedType == 'ADJUST' ? Colors.white : const Color(0xFF333333)),
-                  backgroundColor: Colors.grey.shade100,
-                  onSelected: (_) => setState(() => _selectedType = 'ADJUST'),
+                const SizedBox(height: 10),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('Semua Mutasi', 'ALL', const Color(0xFFE65100)),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Masuk (IN)', 'IN', Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Keluar / Retur (OUT)', 'OUT', Colors.red.shade700),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Opname (ADJUST)', 'ADJUST', Colors.blueGrey.shade700),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const Divider(height: 1),
 
-          // ── DAFTAR MUTASI ──────────────────────────────────────────────
+          // ── DAFTAR MUTASI STOK ─────────────────────────────────────────
           Expanded(
             child: _isLoading
                 ? ListView.builder(
@@ -98,7 +128,7 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
                     ? EmptyDataView(
                         icon: Icons.swap_vert_rounded,
                         title: 'Riwayat Mutasi Kosong',
-                        subtitle: 'Pencatatan barang masuk atau penyesuaian stok akan muncul di sini.',
+                        subtitle: 'Pencatatan barang masuk, keluar, atau penyesuaian stok akan muncul di sini.',
                         actionLabel: 'Muat Ulang',
                         onAction: _loadMovements,
                       )
@@ -129,6 +159,7 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
                                 ],
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
@@ -159,9 +190,13 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              'Produk ID #${move.productId}',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                            Expanded(
+                                              child: Text(
+                                                move.productName ?? 'Produk ID #${move.productId}',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                             Text(
                                               move.quantityDelta >= 0 ? '+${move.quantityDelta}' : '${move.quantityDelta}',
@@ -177,12 +212,41 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 3),
                                         Text(
                                           move.note ?? (isIn ? 'Pemasukan stok' : 'Koreksi stok opname'),
-                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                          style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
                                         ),
-                                        const SizedBox(height: 4),
+                                        if (move.supplierName != null && move.supplierName!.isNotEmpty) ...[
+                                          const SizedBox(height: 5),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF3F4F6),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.business_outlined, size: 11, color: Color(0xFF4B5563)),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  move.supplierName!,
+                                                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        if (move.referenceNo != null && move.referenceNo!.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Ref: ${move.referenceNo}',
+                                            style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7280), fontStyle: FontStyle.italic),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 5),
                                         Text(
                                           DateHelper.formatEpochMs(move.createdAtEpochMs),
                                           style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
@@ -199,6 +263,19 @@ class _GudangInboundTabState extends State<GudangInboundTab> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, Color activeColor) {
+    final isSelected = _selectedType == value;
+    return ChoiceChip(
+      showCheckmark: false,
+      label: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+      selected: isSelected,
+      selectedColor: activeColor,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : const Color(0xFF333333)),
+      backgroundColor: Colors.grey.shade100,
+      onSelected: (_) => setState(() => _selectedType = value),
     );
   }
 }

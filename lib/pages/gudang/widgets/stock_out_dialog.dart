@@ -133,6 +133,33 @@ class _StockOutDialogState extends State<StockOutDialog> {
     }
   }
 
+  Widget _buildPresetChip(String label, String noteValue) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _noteController.text = noteValue;
+        });
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF4B5563),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const primaryRose = Color(0xFFE11D48);
@@ -447,6 +474,17 @@ class _StockOutDialogState extends State<StockOutDialog> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _buildPresetChip('+ Rusak / Cacat', 'Barang Rusak / Cacat Kemasan'),
+                      _buildPresetChip('+ Retur ke Supplier', 'Retur ke Pihak Supplier'),
+                      _buildPresetChip('+ Kadaluarsa', 'Kadaluarsa'),
+                      _buildPresetChip('+ Pemusnahan Internal', 'Pemusnahan Internal Toko'),
+                    ],
                   ),
                   const SizedBox(height: 22),
 

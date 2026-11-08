@@ -4,6 +4,7 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/empty_data_view.dart';
 import '../../../models/member.dart';
 import '../../../services/member_service.dart';
+import '../widgets/member_detail_sheet.dart';
 import '../widgets/member_form_dialog.dart';
 
 class AdminMembersTab extends StatefulWidget {
@@ -223,142 +224,156 @@ class _AdminMembersTabState extends State<AdminMembersTab> {
                           separatorBuilder: (_, _) => const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final m = _filteredMembers[index];
-                            return Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
+                            return Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.grey.shade200),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                onTap: () {
+                                  MemberDetailSheet.show(
+                                    context,
+                                    member: m,
+                                    onEdit: () => _openEditMember(m),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.03),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 22,
-                                    backgroundColor: primaryColor.withValues(alpha: 0.12),
-                                    child: const Icon(Icons.person_rounded, color: primaryColor, size: 24),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          m.name,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 22,
+                                        backgroundColor: primaryColor.withValues(alpha: 0.12),
+                                        child: const Icon(Icons.person_rounded, color: primaryColor, size: 24),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Icon(Icons.phone_outlined, size: 13, color: Colors.grey.shade500),
-                                            const SizedBox(width: 4),
                                             Text(
-                                              m.phone != null && m.phone!.isNotEmpty ? m.phone! : 'Tanpa nomor telepon',
-                                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                              m.name,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.phone_outlined, size: 13, color: Colors.grey.shade500),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  m.phone != null && m.phone!.isNotEmpty ? m.phone! : 'Tanpa nomor telepon',
+                                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                                ),
+                                              ],
+                                            ),
+                                            if (m.address != null && m.address!.isNotEmpty) ...[
+                                              const SizedBox(height: 3),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.location_on_outlined, size: 13, color: Colors.grey.shade400),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      m.address!,
+                                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                            if (m.createdAtEpochMs != null) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Terdaftar: ${DateHelper.formatEpochMs(m.createdAtEpochMs, withTime: false)}',
+                                                style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                                              ),
+                                            ],
                                           ],
                                         ),
-                                        if (m.address != null && m.address!.isNotEmpty) ...[
-                                          const SizedBox(height: 3),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          // Poin Belanja Badge
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.amber.shade50,
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(color: Colors.amber.shade200),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.stars_rounded, size: 14, color: Colors.amber.shade700),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  '${m.points} Poin',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.amber.shade900,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          // Action Buttons: Edit & Delete
                                           Row(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.location_on_outlined, size: 13, color: Colors.grey.shade400),
-                                              const SizedBox(width: 4),
-                                              Expanded(
-                                                child: Text(
-                                                  m.address!,
-                                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                              InkWell(
+                                                onTap: () => _openEditMember(m),
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blue.shade50,
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    border: Border.all(color: Colors.blue.shade200),
+                                                  ),
+                                                  child: Icon(Icons.edit_rounded, size: 16, color: Colors.blue.shade700),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              InkWell(
+                                                onTap: () => _confirmDeleteMember(m),
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red.shade50,
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    border: Border.all(color: Colors.red.shade200),
+                                                  ),
+                                                  child: Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red.shade700),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ],
-                                        if (m.createdAtEpochMs != null) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Terdaftar: ${DateHelper.formatEpochMs(m.createdAtEpochMs, withTime: false)}',
-                                            style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      // Poin Belanja Badge
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber.shade50,
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(color: Colors.amber.shade200),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.stars_rounded, size: 14, color: Colors.amber.shade700),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${m.points} Poin',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.amber.shade900,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      // Action Buttons: Edit & Delete
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          InkWell(
-                                            onTap: () => _openEditMember(m),
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.blue.shade200),
-                                              ),
-                                              child: Icon(Icons.edit_rounded, size: 16, color: Colors.blue.shade700),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          InkWell(
-                                            onTap: () => _confirmDeleteMember(m),
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.red.shade200),
-                                              ),
-                                              child: Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red.shade700),
-                                            ),
-                                          ),
-                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
                             );
                           },

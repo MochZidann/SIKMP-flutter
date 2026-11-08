@@ -328,7 +328,7 @@ class StockItemCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
 
-                        // Harga Jual & Modal
+                        // Harga Jual & Modal & Member
                         Row(
                           children: [
                             Text(
@@ -339,12 +339,33 @@ class StockItemCard extends StatelessWidget {
                                 color: Color(0xFFE65100),
                               ),
                             ),
+                            if (product.memberPrice != null &&
+                                product.memberPrice! > 0 &&
+                                product.memberPrice! < product.price) ...[
+                              const SizedBox(width: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3E8FF),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                                ),
+                                child: Text(
+                                  'Mbr: ${formatRupiah(product.memberPrice!)}',
+                                  style: const TextStyle(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF7C3AED),
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (product.purchasePrice > 0) ...[
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 5),
                               Text(
-                                '• Modal: ${formatRupiah(product.purchasePrice)}',
+                                '• Mdl: ${formatRupiah(product.purchasePrice)}',
                                 style: TextStyle(
-                                  fontSize: 10.5,
+                                  fontSize: 10,
                                   color: Colors.grey.shade500,
                                 ),
                               ),
@@ -358,7 +379,7 @@ class StockItemCard extends StatelessWidget {
 
                   // 3. BADGE STOK & STATUS
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: statusBgColor,
                       borderRadius: BorderRadius.circular(8),
@@ -370,7 +391,7 @@ class StockItemCard extends StatelessWidget {
                         Text(
                           '${product.stock}',
                           style: TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w900,
                             color: statusTextColor,
                             height: 1.1,
@@ -388,74 +409,109 @@ class StockItemCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 6),
 
-                  // 4. MENU AKSI POPUP (⋮)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, size: 20, color: Colors.black45),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 160),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    onSelected: (val) {
-                      if (val == 'stock_in') onStockIn();
-                      if (val == 'stock_out') onStockOut();
-                      if (val == 'stock_adjust') onStockAdjust();
-                      if (val == 'edit') onEdit?.call();
-                      if (val == 'delete') onDelete?.call();
-                    },
-                    itemBuilder: (ctx) => [
-                      const PopupMenuItem(
-                        value: 'stock_in',
-                        child: Row(
-                          children: [
-                            Icon(Icons.add_shopping_cart_rounded, size: 18, color: Color(0xFF059669)),
-                            SizedBox(width: 10),
-                            Text('Stok Masuk', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'stock_out',
-                        child: Row(
-                          children: [
-                            Icon(Icons.remove_shopping_cart_rounded, size: 18, color: Color(0xFFE11D48)),
-                            SizedBox(width: 10),
-                            Text('Barang Keluar', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'stock_adjust',
-                        child: Row(
-                          children: [
-                            Icon(Icons.sync_rounded, size: 18, color: Color(0xFF2563EB)),
-                            SizedBox(width: 10),
-                            Text('Penyesuaian (Opname)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuDivider(height: 8),
-                      if (onEdit != null)
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE65100)),
-                              SizedBox(width: 10),
-                              Text('Edit Barang', style: TextStyle(fontSize: 12.5)),
-                            ],
+                  // 4. AKSI LANGSUNG DENGAN TOMBOL ICON ROUNDED-FULL (SEPERTI WEB)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // + Stok Masuk
+                      Tooltip(
+                        message: 'Stok Masuk',
+                        child: InkWell(
+                          onTap: onStockIn,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFECFDF5),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: const Icon(Icons.add_rounded, size: 17, color: Color(0xFF059669)),
                           ),
                         ),
-                      if (onDelete != null)
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
-                              SizedBox(width: 10),
-                              Text('Hapus Barang', style: TextStyle(fontSize: 12.5, color: Colors.red)),
-                            ],
+                      ),
+                      const SizedBox(width: 4),
+
+                      // − Stok Keluar
+                      Tooltip(
+                        message: 'Barang Keluar / Retur',
+                        child: InkWell(
+                          onTap: onStockOut,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFFFF1F2),
+                              border: Border.all(color: const Color(0xFFFECDD3)),
+                            ),
+                            child: const Icon(Icons.remove_rounded, size: 17, color: Color(0xFFE11D48)),
                           ),
                         ),
+                      ),
+                      const SizedBox(width: 4),
+
+                      // 📝 Opname
+                      Tooltip(
+                        message: 'Penyesuaian (Opname)',
+                        child: InkWell(
+                          onTap: onStockAdjust,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFFFFBEB),
+                              border: Border.all(color: const Color(0xFFFDE68A)),
+                            ),
+                            child: const Icon(Icons.tune_rounded, size: 15, color: Color(0xFFD97706)),
+                          ),
+                        ),
+                      ),
+
+                      // ⋮ Menu Tambahan (Edit & Hapus)
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert_rounded, size: 18, color: Colors.black45),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 150),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onSelected: (val) {
+                          if (val == 'stock_in') onStockIn();
+                          if (val == 'stock_out') onStockOut();
+                          if (val == 'stock_adjust') onStockAdjust();
+                          if (val == 'edit') onEdit?.call();
+                          if (val == 'delete') onDelete?.call();
+                        },
+                        itemBuilder: (ctx) => [
+                          if (onEdit != null)
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 16, color: Color(0xFFE65100)),
+                                  SizedBox(width: 8),
+                                  Text('Edit Barang', style: TextStyle(fontSize: 12.5)),
+                                ],
+                              ),
+                            ),
+                          if (onDelete != null)
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Hapus Barang', style: TextStyle(fontSize: 12.5, color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ],

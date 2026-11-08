@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/widgets/app_top_bar_title.dart';
+import '../../models/member.dart';
 import '../../models/product.dart';
 import '../../models/qris_response.dart';
 import '../../services/pos_service.dart';
@@ -31,6 +32,7 @@ class PosPageState extends State<PosPage> {
   List<Product> _products = [];
   bool _isLoadingProducts = true;
   final Map<int, int> _cart = {}; // productId -> quantity
+  Member? _selectedMember;
 
   bool _isGenerating = false;
 
@@ -139,7 +141,13 @@ class PosPageState extends State<PosPage> {
           barcode: '',
         ),
       );
-      total += p.price * qty;
+      final effectivePrice = (_selectedMember != null &&
+              p.memberPrice != null &&
+              p.memberPrice! > 0 &&
+              p.memberPrice! < p.price)
+          ? p.memberPrice!
+          : p.price;
+      total += effectivePrice * qty;
     });
     return total;
   }
@@ -166,6 +174,7 @@ class PosPageState extends State<PosPage> {
     return {
       'amount': _cartTotal,
       'items': itemsPayload,
+      'memberId': _selectedMember?.id,
     };
   }
 
@@ -199,6 +208,7 @@ class PosPageState extends State<PosPage> {
       context,
       finalAmount: payload['amount'] as int,
       itemsPayload: payload['items'] as List<Map<String, dynamic>>?,
+      memberId: payload['memberId'] as int?,
       onSuccess: _showSuccessReceiptDialog,
       onError: _showErrorSnackbar,
     );
@@ -213,6 +223,7 @@ class PosPageState extends State<PosPage> {
 
     final finalAmount = payload['amount'] as int;
     final itemsPayload = payload['items'] as List<Map<String, dynamic>>?;
+    final memberId = payload['memberId'] as int?;
 
     setState(() => _isGenerating = true);
 
@@ -220,6 +231,7 @@ class PosPageState extends State<PosPage> {
       final response = await _posService.generateQris(
         amount: itemsPayload == null ? finalAmount : null,
         items: itemsPayload,
+        memberId: memberId,
       );
 
       if (mounted) {
@@ -268,6 +280,7 @@ class PosPageState extends State<PosPage> {
         }).toList();
       }
       _cart.clear();
+      _selectedMember = null;
     });
 
     // 2. Sinkronkan data aktual dari server database Laravel
@@ -297,6 +310,8 @@ class PosPageState extends State<PosPage> {
       context,
       products: _products,
       cart: _cart,
+      selectedMember: _selectedMember,
+      onMemberChanged: (m) => setState(() => _selectedMember = m),
       onClearCart: () => setState(() => _cart.clear()),
       onIncrement: (p) => setState(() => _cart[p.id] = (_cart[p.id] ?? 0) + 1),
       onDecrement: (p) {

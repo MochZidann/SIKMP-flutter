@@ -251,13 +251,38 @@ class PosProductCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            formatRupiah(product.price),
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
-                              color: isOutOfStock ? Colors.grey : const Color(0xFFD32F2F),
-                            ),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            children: [
+                              Text(
+                                formatRupiah(product.price),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: isOutOfStock ? Colors.grey : const Color(0xFFD32F2F),
+                                ),
+                              ),
+                              if (product.memberPrice != null &&
+                                  product.memberPrice! > 0 &&
+                                  product.memberPrice! < product.price)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEDE9FE),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: const Color(0xFFDDD6FE)),
+                                  ),
+                                  child: Text(
+                                    'Mbr: ${formatRupiah(product.memberPrice!)}',
+                                    style: const TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF7C3AED),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),

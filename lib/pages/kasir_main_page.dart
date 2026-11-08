@@ -5,6 +5,7 @@ import 'pos/pos_page.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/penjualan_tab.dart';
 import 'tabs/produk_tab.dart';
+import 'tabs/retur_tab.dart';
 
 class KasirMainPage extends StatefulWidget {
   final int initialIndex;
@@ -21,6 +22,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
   final GlobalKey<PosPageState> _posKey = GlobalKey<PosPageState>();
   final GlobalKey<ProdukTabState> _produkKey = GlobalKey<ProdukTabState>();
   final GlobalKey<PenjualanTabState> _penjualanKey = GlobalKey<PenjualanTabState>();
+  final GlobalKey<ReturTabState> _returKey = GlobalKey<ReturTabState>();
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _KasirMainPageState extends State<KasirMainPage> {
     _dashboardKey.currentState?.reload();
     _produkKey.currentState?.reload();
     _penjualanKey.currentState?.reload();
+    _returKey.currentState?.reload();
   }
 
   void _onTabTapped(int index) {
@@ -54,6 +57,9 @@ class _KasirMainPageState extends State<KasirMainPage> {
         break;
       case 3:
         _penjualanKey.currentState?.reload();
+        break;
+      case 4:
+        _returKey.currentState?.reload();
         break;
     }
   }
@@ -111,8 +117,18 @@ class _KasirMainPageState extends State<KasirMainPage> {
             },
           ),
           PenjualanTab(key: _penjualanKey),
+          ReturTab(key: _returKey),
         ],
       ),
+      floatingActionButton: _currentIndex == 1
+          ? FloatingActionButton(
+              backgroundColor: const Color(0xFFC62828),
+              foregroundColor: Colors.white,
+              tooltip: 'Scan Barcode Produk Kasir',
+              onPressed: _openBarcodeScanner,
+              child: const Icon(Icons.qr_code_scanner_rounded, size: 24),
+            )
+          : null,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -127,91 +143,48 @@ class _KasirMainPageState extends State<KasirMainPage> {
         child: SafeArea(
           top: false,
           child: SizedBox(
-            height: 68,
+            height: 64,
             child: Row(
               children: [
                 // 1. Dashboard
                 _buildNavItem(
                   index: 0,
-                  assetPath: 'assets/images/dashboard.png',
                   icon: Icons.dashboard_outlined,
                   selectedIcon: Icons.dashboard_rounded,
                   label: 'Dashboard',
-                  iconSize: 24,
+                  iconSize: 22,
                 ),
                 // 2. POS
                 _buildNavItem(
                   index: 1,
-                  assetPath: 'assets/images/pos.png',
                   icon: Icons.point_of_sale_outlined,
                   selectedIcon: Icons.point_of_sale_rounded,
                   label: 'POS',
-                  iconSize: 28,
+                  iconSize: 22,
                 ),
-
-                // 3. Tombol Scan QR (Di tengah, rata bawah, tanpa teks, style gradasi bulat seperti semula)
-                Expanded(
-                  child: Center(
-                    child: Tooltip(
-                      message: 'Scan Barcode Kamera',
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFEF5350), Color(0xFFC62828)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFC62828).withValues(alpha: 0.35),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            width: 3.0,
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: _openBarcodeScanner,
-                            splashColor: Colors.white.withValues(alpha: 0.3),
-                            child: const Center(
-                              child: Icon(
-                                Icons.qr_code_scanner_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 4. Produk
+                // 3. Produk
                 _buildNavItem(
                   index: 2,
                   icon: Icons.inventory_2_outlined,
                   selectedIcon: Icons.inventory_2_rounded,
                   label: 'Produk',
-                  iconSize: 24,
+                  iconSize: 22,
                 ),
-                // 5. Penjualan
+                // 4. Penjualan
                 _buildNavItem(
                   index: 3,
-                  assetPath: 'assets/images/penjualan.png',
                   icon: Icons.receipt_long_outlined,
                   selectedIcon: Icons.receipt_long_rounded,
                   label: 'Penjualan',
-                  iconSize: 24,
+                  iconSize: 22,
+                ),
+                // 5. Retur
+                _buildNavItem(
+                  index: 4,
+                  icon: Icons.assignment_return_outlined,
+                  selectedIcon: Icons.assignment_return_rounded,
+                  label: 'Retur',
+                  iconSize: 22,
                 ),
               ],
             ),

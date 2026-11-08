@@ -6,6 +6,7 @@ import '../../../services/pos_service.dart';
 class CashPaymentBottomSheet extends StatefulWidget {
   final int finalAmount;
   final List<Map<String, dynamic>>? itemsPayload;
+  final int? memberId;
   final Function(Map<String, dynamic> receiptData) onSuccess;
   final Function(String message) onError;
 
@@ -13,6 +14,7 @@ class CashPaymentBottomSheet extends StatefulWidget {
     super.key,
     required this.finalAmount,
     required this.itemsPayload,
+    this.memberId,
     required this.onSuccess,
     required this.onError,
   });
@@ -21,6 +23,7 @@ class CashPaymentBottomSheet extends StatefulWidget {
     BuildContext context, {
     required int finalAmount,
     required List<Map<String, dynamic>>? itemsPayload,
+    int? memberId,
     required Function(Map<String, dynamic> receiptData) onSuccess,
     required Function(String message) onError,
   }) {
@@ -31,6 +34,7 @@ class CashPaymentBottomSheet extends StatefulWidget {
       builder: (sheetCtx) => CashPaymentBottomSheet(
         finalAmount: finalAmount,
         itemsPayload: itemsPayload,
+        memberId: memberId,
         onSuccess: onSuccess,
         onError: onError,
       ),
@@ -86,6 +90,7 @@ class _CashPaymentBottomSheetState extends State<CashPaymentBottomSheet> {
         items: widget.itemsPayload,
         amount: widget.itemsPayload == null ? widget.finalAmount : null,
         amountPaid: _cashReceived,
+        memberId: widget.memberId,
       );
 
       if (mounted) {
