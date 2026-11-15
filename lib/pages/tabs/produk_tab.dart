@@ -50,31 +50,43 @@ class ProdukTabState extends State<ProdukTab> {
     if (!silent) {
       setState(() => _isLoading = true);
     }
-    final prods = await _posService.getProducts();
-    if (mounted) {
-      setState(() {
+    try {
+      final prods = await _posService.getProducts();
+      if (mounted) {
         _allProducts = prods;
-        _applyFilters();
         _isLoading = false;
-      });
+        _applyFilters();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _filteredProducts = [];
+        });
+      }
     }
   }
 
   void _applyFilters() {
     final query = _searchController.text.toLowerCase().trim();
 
+    final filtered = _allProducts.where((p) {
+      final matchesQuery = query.isEmpty ||
+          p.name.toLowerCase().contains(query) ||
+          (p.barcode != null && p.barcode!.toLowerCase().contains(query)) ||
+          (p.category != null && p.category!.toLowerCase().contains(query));
+
+      final prodCat = (p.category == null || p.category!.trim().isEmpty)
+          ? 'Lainnya'
+          : p.category!.trim();
+      final matchesCat = _selectedCategory == 'Semua' ||
+          prodCat.toLowerCase() == _selectedCategory.toLowerCase();
+
+      return matchesQuery && matchesCat;
+    }).toList();
+
     setState(() {
-      _filteredProducts = _allProducts.where((p) {
-        final matchesQuery = query.isEmpty ||
-            p.name.toLowerCase().contains(query) ||
-            (p.barcode != null && p.barcode!.toLowerCase().contains(query)) ||
-            (p.category != null && p.category!.toLowerCase().contains(query));
-
-        final matchesCat = _selectedCategory == 'Semua' ||
-            p.category?.toLowerCase() == _selectedCategory.toLowerCase();
-
-        return matchesQuery && matchesCat;
-      }).toList();
+      _filteredProducts = filtered;
     });
   }
 
@@ -193,25 +205,62 @@ class ProdukTabState extends State<ProdukTab> {
                   itemCount: 6,
                   itemBuilder: (context, index) => const SkeletonProductTile(),
                 )
-              : _filteredProducts.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off_rounded,
-                              size: 48, color: Colors.grey.shade400),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Produk tidak ditemukan.',
-                            style: TextStyle(color: Colors.grey),
+              : RefreshIndicator(
+                  color: const Color(0xFFD32F2F),
+                  onRefresh: _loadProducts,
+                  child: _filteredProducts.isEmpty
+                      ? LayoutBuilder(
+                          builder: (context, constraints) => SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.search_off_rounded,
+                                        size: 54,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        _allProducts.isEmpty
+                                            ? 'Belum ada produk yang dimuat.'
+                                            : 'Produk tidak ditemukan.',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton.icon(
+                                        onPressed: _loadProducts,
+                                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                                        label: const Text('Muat Ulang'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFD32F2F),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 18,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      color: const Color(0xFFD32F2F),
-                      onRefresh: _loadProducts,
-                      child: ListView.builder(
+                        )
+                      : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _filteredProducts.length,
                         itemBuilder: (context, index) {

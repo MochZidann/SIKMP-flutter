@@ -73,6 +73,28 @@ class PosReceiptDialog extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
+          if (data['wa_receipt_status'] == 'SENT') ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle_rounded, size: 13, color: Colors.green.shade700),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Struk terkirim ke WhatsApp Member',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green.shade800),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
 
           // Rincian Struk Singkat

@@ -43,6 +43,11 @@ class _KasirMainPageState extends State<KasirMainPage> {
     setState(() {
       _currentIndex = index;
     });
+    if (index == 2) {
+      _produkKey.currentState?.reload();
+    } else if (index == 1) {
+      _posKey.currentState?.reloadProducts();
+    }
   }
 
   /// Aksi Scan Barcode Kamera Kasir (Mode Beruntun / Banyak Barang)

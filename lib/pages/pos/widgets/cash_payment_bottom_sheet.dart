@@ -103,6 +103,8 @@ class _CashPaymentBottomSheetState extends State<CashPaymentBottomSheet> {
           'amountPaid': _cashReceived,
           'change': change,
           'items': result['items'] ?? widget.itemsPayload ?? [],
+          'wa_receipt_status': result['wa_receipt_status'],
+          'wa_direct_link': result['wa_direct_link'],
         };
         widget.onSuccess(receiptData);
       }

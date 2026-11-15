@@ -1,9 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Konfigurasi pusat alamat server dan endpoint API backend Laravel.
-///
-/// Mengatur alamat IP dan port server backend secara tersentralisasi
-/// untuk seluruh modul aplikasi (Auth, POS, Gudang, Admin, Owner).
 class ApiConfig {
   /// Alamat IP Server Backend (dapat diubah langsung di baris ini)
   static const String defaultServerIp = '192.168.1.6';
@@ -14,8 +10,46 @@ class ApiConfig {
   static String serverIp = defaultServerIp;
   static String serverPort = defaultServerPort;
 
-  /// Root host server tanpa path (contoh: http://192.168.1.6:8000)
-  static String get hostUrl => 'http://$serverIp:$serverPort';
+  /// Root host server tanpa path (contoh: http://192.168.1.6:8000 atau https://xyz.trycloudflare.com)
+  static String get hostUrl {
+    var raw = serverIp.trim();
+    while (raw.endsWith('/')) {
+      raw = raw.substring(0, raw.length - 1);
+    }
+
+    // Jika menginputkan skema http:// atau https://
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      final uri = Uri.tryParse(raw);
+      if (uri != null && uri.host.isNotEmpty) {
+        final host = uri.host;
+        // Domain tunnel (Cloudflare, Ngrok, dll) selalu menggunakan HTTPS standar (port 443)
+        if (host.contains('trycloudflare.com') || host.contains('ngrok')) {
+          return 'https://$host';
+        }
+        if (uri.hasPort && uri.port != 80 && uri.port != 443) {
+          return '${uri.scheme}://$host:${uri.port}';
+        }
+        return '${uri.scheme}://$host';
+      }
+      return raw;
+    }
+
+    // Jika domain publik / tunnel tanpa skema (misal xyz.trycloudflare.com)
+    if (raw.contains('trycloudflare.com') ||
+        raw.contains('ngrok.io') ||
+        raw.contains('ngrok-free.app') ||
+        (!raw.contains(':') && raw.contains('.') && !RegExp(r'^\d+\.\d+\.\d+\.\d+$').hasMatch(raw))) {
+      return 'https://$raw';
+    }
+
+    // Jika IP sudah menyertakan port (misal 192.168.1.6:8000)
+    if (raw.contains(':')) {
+      return 'http://$raw';
+    }
+
+    // Default IP lokal dengan port backend
+    return 'http://$raw:$serverPort';
+  }
 
   /// Root base URL API Laravel (contoh: http://192.168.1.6:8000/api)
   static String get apiBaseUrl => '$hostUrl/api';

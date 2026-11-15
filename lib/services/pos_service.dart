@@ -21,10 +21,13 @@ class PosService {
 
   /// Delegasi penyimpanan IP server ke ApiConfig
   static Future<void> saveBaseUrl(String newUrl) async {
-    final uri = Uri.tryParse(newUrl);
-    if (uri != null && uri.host.isNotEmpty) {
-      await ApiConfig.setServerIp(uri.host);
+    var clean = newUrl.trim();
+    if (clean.endsWith('/api/pos')) {
+      clean = clean.substring(0, clean.length - 8);
+    } else if (clean.endsWith('/api')) {
+      clean = clean.substring(0, clean.length - 4);
     }
+    await ApiConfig.setServerIp(clean);
   }
 
   /// Ambil daftar produk aktif dari database
@@ -37,11 +40,15 @@ class PosService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success'] == true && data['data'] is List) {
+        if (data is Map && data['success'] == true && data['data'] is List) {
           return (data['data'] as List)
-              .map((item) => Product.fromJson(item))
+              .map((item) => Product.fromJson(item as Map<String, dynamic>))
               .toList();
+        } else {
+          debugPrint('PosService.getProducts warning: unexpected body -> ${response.body}');
         }
+      } else {
+        debugPrint('PosService.getProducts HTTP ${response.statusCode} -> ${response.body}');
       }
       return [];
     } catch (e) {
